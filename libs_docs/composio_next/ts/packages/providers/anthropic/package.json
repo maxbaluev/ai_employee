@@ -1,0 +1,47 @@
+{
+  "name": "@composio/anthropic",
+  "version": "0.1.53",
+  "description": "Non-Agentic Provider for Anthropic in Composio SDK",
+  "main": "src/index.ts",
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "scripts": {
+    "clean": "git clean -xdf node_modules",
+    "build": "tsup",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "composio",
+    "provider",
+    "anthropic"
+  ],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.0",
+  "peerDependencies": {
+    "@anthropic-ai/sdk": "^0.52.0",
+    "@composio/core": "0.1.53",
+    "@mastra/mcp": "^0.12.0"
+  },
+  "devDependencies": {
+    "@composio/core": "workspace:*",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,65 @@
+name: TS SDK Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [next]
+
+env:
+  GITHUB_ACCESS_TOKEN: ${{ secrets.CI_BOT_TOKEN }}
+
+jobs:
+  release:
+    name: Release Typescript SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Linting
+        run: pnpm lint
+
+      - name: Run Build
+        run: pnpm run build:packages
+
+      - name: Set up .npmrc
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+      - name: Create Release Pull Request & Publish packages
+        id: changesets
+        uses: changesets/action@v1
+        if: github.event_name != 'workflow_dispatch' # only run on master merges
+        env:
+          GITHUB_TOKEN: ${{ secrets.CI_BOT_TOKEN }}
+        with:
+          publish: pnpm changeset:release
+          commit: "Release: update version"
+          title: "Release: update version"
+
+      - name: Set Version Info
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          VERSIONS=$(pnpm changeset status --json | jq -r '.releases[] | "⚡️ \(.name) -> \(.version)"' || echo "No version info available")
+          echo "SLACK_VERSIONS=$VERSIONS" >> $GITHUB_ENV
+
+      - name: Send Slack Notification
+        if: steps.changesets.outputs.published == 'true'
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "🚀 New SDK version published!\n*Repository:* ${{ github.repository }}\n*Versions:*\n${{ env.SLACK_VERSIONS }}\n*Commit:* ${{ github.sha }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

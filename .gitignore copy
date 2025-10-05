@@ -1,0 +1,146 @@
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+.roo
+
+# Editor directories and files
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
+
+# Machine-specific VS Code settings
+.vscode/settings.json
+
+
+# ─────────────────────────────
+#  Core OS / Editor cruft
+# ─────────────────────────────
+.DS_Store
+Thumbs.db
+Icon?
+.idea/
+*.swp
+*~
+.venv
+gen copy/
+
+
+# ─────────────────────────────
+#  Environment & secrets
+# ─────────────────────────────
+.env
+.env.*           # .env.production, .env.local, etc.
+test_input1.json
+
+
+# ─────────────────────────────
+#  Python
+# ─────────────────────────────
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+wheelhouse/
+.Python
+sitecustomize.py
+
+# Virtual-envs (both in-tree and external links)
+.venv/
+venv/
+env/
+ENV/
+.python-version  # pyenv local version file
+
+# Testing / coverage / static analysis
+.coverage
+.cache/
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
+ruff_cache/
+.pyright/
+
+# Pip metadata & logs
+pip-wheel-metadata/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ─────────────────────────────
+#  Node / JavaScript / TypeScript
+# ─────────────────────────────
+node_modules/
+.npm/
+.pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log*
+.bun-install-cache/
+
+# Build / output folders
+dist/
+build/
+out/
+coverage/
+.nyc_output/
+.next/          # Next.js
+.storybook/
+.vercel/
+.parcel-cache/
+.eslintcache
+*.tsbuildinfo   # tsc incremental build info
+gen/
+
+# ─────────────────────────────
+#  Logs & temp files
+# ─────────────────────────────
+logs/
+*.tmp
+*.temp
+
+# ─────────────────────────────
+#  Dataset files
+# ─────────────────────────────
+demo_data/call_center_dataset-dont_use/
+
+# ─────────────────────────────
+#  Keep useful lock files
+# ─────────────────────────────
+!package-lock.json
+!pnpm-lock.yaml
+!yarn.lock
+!poetry.lock
+
+# Skyler experimental & personal 
+.skyler/
+deepinfra_test/
+deepinfra_test2/
+remove/
+
+# Max
+build_llm_context.py
+
+# Template folders
+.vercel

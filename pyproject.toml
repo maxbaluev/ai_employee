@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ai-employee-platform"
+version = "0.1.0"
+description = "Composio-only universal MCP AI Employee Platform (value-iterative, schema-driven, Outbox executor)."
+readme = "README.md"
+requires-python = ">=3.11,<4.0"
+license = { text = "MIT" }
+authors = [{ name = "AI Employee Team", email = "dev@yourcompany.com" }]
+
+dependencies = [
+  # Web / API
+  "fastapi>=0.118.0",
+  "uvicorn[standard]>=0.37.0",
+  "httpx>=0.27.0,<1.0.0",
+
+  # Validation / schema-driven planning & forms
+  "pydantic>=2.11.10",
+  "pydantic-settings>=2.11.0",
+  "jsonschema>=4.25.1",
+  "jsonpath-ng>=1.7.0",
+  "orjson>=3.11.3",
+  "PyYAML>=6.0.2",                 # load Program/Kernels configs (YAML)
+
+  # Supabase (direct SQL via CLI; RLS-aware Python client for RPC/REST)
+  "supabase>=2.21.1",
+
+  # Scheduling & retries
+  "APScheduler>=4.0.0a6",
+  "tenacity>=8.0.0,<9.0.0",
+
+  # Logging
+  "structlog>=25.4.0",
+
+  # Agents / Realtime
+  "google-adk>=1.15.1",             # Outcome Planner, Drafter, Compliance, QA (typed)
+  "livekit-agents>=1.2.0",
+
+  # MCP (Composio) — Python SDK
+  "composio>=0.8.20"                # composio python client (auth, list tools, run tools)
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3.0",
+  "pytest-asyncio>=0.23.8",
+  "respx>=0.21.1",
+  "freezegun>=1.5.1"
+]
+
+[project.scripts]
+api = "app.__main__:main"          # uvicorn launcher
+outbox = "worker.outbox:main"      # Outbox relay entrypoint
+plan = "agents.plan:main"          # manual plan trigger
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-q --strict-markers --disable-warnings"
+testpaths = ["tests"]
+asyncio_mode = "auto"

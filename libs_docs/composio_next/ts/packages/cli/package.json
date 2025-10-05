@@ -1,0 +1,83 @@
+{
+  "name": "@composio/cli",
+  "version": "0.1.24",
+  "description": "Composio CLI",
+  "main": "dist/bin.js",
+  "bin": {
+    "composio": "./dist/composio"
+  },
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ComposioHQ/composio.git",
+    "directory": "ts/packages/cli"
+  },
+  "publishConfig": {
+    "access": "public",
+    "main": "dist/bin.js",
+    "types": "dist/bin.d.ts"
+  },
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "scripts": {
+    "clean": "git clean -xdf node_modules",
+    "cli": "bun run src/bin.ts",
+    "build:bin": "bun run ./scripts/build-binary.ts",
+    "install:bin": "bun run ./scripts/install-binary.ts ./dist/composio",
+    "mock": "bun run ./scripts/copy-mocks-from-cache.ts",
+    "prebuild": "pnpm run typecheck",
+    "build": "tsup",
+    "bin": "./dist/composio",
+    "test": "vitest run",
+    "prepublishOnly": "pnpm run build && pnpm run build:bin",
+    "typecheck:src": "tsc --noEmit -p ./tsconfig.src.json",
+    "typecheck:test": "tsc --noEmit -p ./tsconfig.test.json",
+    "typecheck": "pnpm run typecheck:src && pnpm run typecheck:test"
+  },
+  "keywords": [
+    "composio",
+    "mcp",
+    "cli"
+  ],
+  "author": "Alberto Schiabel <alberto.schiabel@gmail.com> (https://github.com/jkomyno)",
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.0",
+  "devDependencies": {
+    "@effect/eslint-plugin": "^0.3.2",
+    "@effect/language-service": "^0.27.1",
+    "@effect/platform": "^0.85.2",
+    "@effect/vitest": "^0.23.8",
+    "@types/bun": "^1.2.16",
+    "@types/decompress": "^4.2.7",
+    "@types/semver": "^7.7.0",
+    "tempy": "^3.1.0",
+    "tsup": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "@clack/prompts": "1.0.0-alpha.1",
+    "@composio/client": "catalog:",
+    "@composio/core": "workspace:*",
+    "@composio/ts-builders": "workspace:*",
+    "@effect/cli": "^0.64.2",
+    "@effect/platform-bun": "^0.70.4",
+    "@effect/platform-node-shared": "^0.40.4",
+    "ansis": "^4.1.0",
+    "comment-json": "^4.2.5",
+    "decompress": "^4.2.1",
+    "effect": "^3.16.16",
+    "indent-string": "^5.0.0",
+    "open": "^10.2.0",
+    "openapi-typescript": "^7.8.0",
+    "picocolors": "^1.1.1",
+    "semver": "^7.7.2",
+    "source-map-js": "^1.2.1",
+    "superjson": "^2.2.2",
+    "ts-morph": "^26.0.0"
+  },
+  "gitHead": "4fae6e54d5c150fba955cc5fa314281da5a1e064"
+}

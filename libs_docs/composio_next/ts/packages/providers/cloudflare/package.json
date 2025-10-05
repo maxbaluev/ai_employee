@@ -1,0 +1,43 @@
+{
+  "name": "@composio/cloudflare",
+  "version": "0.1.53",
+  "description": "",
+  "main": "src/index.ts",
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "README.md",
+    "dist"
+  ],
+  "scripts": {
+    "clean": "git clean -xdf node_modules",
+    "build": "tsup",
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.0",
+  "peerDependencies": {
+    "@cloudflare/workers-types": "catalog:",
+    "@composio/core": "0.1.53"
+  },
+  "devDependencies": {
+    "@composio/core": "workspace:*",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "gitHead": "4fae6e54d5c150fba955cc5fa314281da5a1e064"
+}
