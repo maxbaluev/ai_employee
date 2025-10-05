@@ -1,38 +1,37 @@
-# Roadmap — AI Employee Platform
+# Roadmap (Final)
 
-Timeline assumes two-week sprints. Dates are placeholders; update during planning.
+Two-week sprint cadence. Update dates during planning.
 
 ## Sprint 0 — Foundations
-
-- Finalize Composio contract & scope inventory.
-- Implement environment setup automation (Make targets, codex.yml).
-- Replace demo tools in ADK agent with Composio FunctionTools (see `docs/todo.md` §1).
-- Establish telemetry scaffolding (logging format, OpenTelemetry exporter stub).
+- Finalize Composio contract + toolkit list.
+- Replace demo tools with Composio FunctionTools (docs/todo §1).
+- Stand up tool catalog + connected account endpoints.
+- Decide metrics backend, commit to OTLP/Prometheus path.
+- Produce `codex.yml`, Makefile, `.env.example` updates.
 
 ## Sprint 1 — Universal MVP
-
-- Tool catalog persistence with risk/rate metadata.
-- Warm Scan readers + Evidence Cards on Desk.
-- Schema-driven Approvals with JIT scope upgrade flow.
-- Outbox worker delivering Gmail/Slack/HubSpot envelopes with idempotency.
-- Audit log and Activity & Safety surface for Outbox visibility.
+- Implement Supabase schema + RLS for tenants, objectives, tasks, actions, audit.
+- Build Warm Scan + Evidence pipeline (kernels, APScheduler).
+- Deliver Desk & Approvals UI with schema-driven forms.
+- Ship Outbox worker (basic retries, quiet hours, idempotency).
+- Integrations page with JIT scope modal + tool toggles.
 
 ## Sprint 2 — Proactivity & Trust
+- Trickle Refresh scheduler with rate bucket budgets.
+- Trust ledger + auto-approval for low-risk actions; expose trust chip.
+- Global Desk drag-and-drop reassignment; Approve-all low-risk.
+- Activity & Safety page with timeline, DLQ controls, rate-limit gauges.
+- LiveKit worker integration into Activity timeline.
 
-- Trickle Refresh scheduler with rate bucket enforcement.
-- Trust score computation & autonomy gates (auto low-risk when Trusted).
-- Bulk Approve low-risk + drag-and-drop Global Desk.
-- Integrate LiveKit call completions into Activity timeline.
+## Sprint 3 — Hardening & Ops
+- Observability dashboards + alerts per `docs/observability.md`.
+- Runbooks for Composio outage, Outbox DLQ, trust anomalies.
+- Logging hygiene + privacy audits (hash verification, retention checks).
+- Localization prep (extract strings, translation pipeline stub).
+- Penetration test + update threat model.
 
-## Sprint 3 — Hardening & Scale
-
-- Observability dashboards (metrics + traces) per `docs/observability.md`.
-- Security posture: threat model validation, penetration test prep, quiet hours/DNC enforcement.
-- Localization prep (extract copy, enable translation pipeline).
-- Runbooks for Composio outage, Outbox DLQ, trust score anomalies.
-
-## Backlog / Open Questions
-
-- Should we add codex-guided self-healing for failed planner runs?
-- Evaluate automated kernel verification against Composio schema changes.
-- Investigate multi-tenant analytics exports (requires cross-tenant safeguards).
+## Backlog / Future
+- Composio trigger ingestion for push updates.
+- Multi-agent orchestration (compliance reviewer) using CopilotRuntime service adapters.
+- Tenant-level analytics exports (adopted tools, trust trend) with privacy guardrails.
+- Self-healing planner diagnostics (auto reruns, diff reports).

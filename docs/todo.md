@@ -1,138 +1,122 @@
-# Build Log & To-Do — AI Employee Platform
+# Build Log & To-Do — AI Employee Platform (Final)
 
-This log sequences the work required to turn the validated architecture/UX into a production-grade Composio-only AI employee. Each item references the relevant code or documentation so Codex can execute tasks incrementally. Cross-reference with `docs/prd.md`, `docs/requirements.md`, and `docs/roadmap.md` before claiming tasks.
+Follow this sequence to implement the platform quickly while keeping Codex fully informed. Each step cites relevant docs.
 
 ---
 
 ## 0. Environment Baseline
 
-- [ ] Verify Node/PNPM toolchain (`node >= 18`, `pnpm --version`).
-- [ ] Install UI deps (`pnpm install` or `npm install`).
-- [ ] Provision Python venv in `agent/` (`scripts/setup-agent.sh`).
-- [ ] Export required keys: `GOOGLE_API_KEY`, `COMPOSIO_API_KEY`, optional `OPENAI_API_KEY`.
-- [ ] Run `npm run dev` and confirm:
-  - Next.js app on `http://localhost:3000` renders Copilot sidebar.
-  - FastAPI agent (`http://localhost:8000/`) answers health (AGUI handshake).
+- [ ] Confirm toolchain: `node -v (>=18)`, `pnpm --version`, `python3 --version (>=3.11)`.
+- [ ] Install JS deps (`pnpm install`) and Python agent deps (`npm run install:agent`).
+- [ ] Copy `.env.example` → `.env`, fill `GOOGLE_API_KEY`, `COMPOSIO_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` (once available).
+- [ ] Run `npm run dev` (UI + agent). Verify:
+  - `http://localhost:3000` renders CopilotKit sidebar with sample agent.
+  - `http://localhost:8000/` returns AGUI metadata (check via curl; should stream events on run).
 
 ---
 
-## 1. Replace Demo Tools with Composio
+## 1. Replace Demo Tools with Composio (docs/arch.md §4.3, docs/requirements.md FR-023)
 
-1. Read `docs/arch.md` §4.4 for Composio integration strategy.
-2. In `agent/agent.py`:
-   - [ ] Instantiate `Composio(provider=GoogleAdkProvider())` (see `libs_docs/composio_next/python/providers/google_adk/google_adk_demo.py`).
-   - [ ] Fetch toolkits relevant to first objective (e.g., Gmail, HubSpot) via `tools.get`.
-   - [ ] Replace hard-coded `set_proverbs` / `get_weather` tools with Composio-provided `FunctionTool`s, keeping state callbacks intact for shared state demos.
-3. Persist the fetched tool schema to disk or database stub so UI can render forms later.
-4. Update `.env.example` with Composio credentials expectations.
-5. Add smoke test: run `runner.run` once and assert Composio tool slug appears in AGUI `ToolCallStartEvent`.
+1. In `agent/agent.py`:
+   - [ ] Initialize `Composio(provider=GoogleAdkProvider())` (see `libs_docs/composio_next/python/providers/google_adk/google_adk_demo.py`).
+   - [ ] Fetch initial toolkits (`GMAIL`, `SLACK`, `HUBSPOT`, etc.) via `composio.tools.get(user_id, toolkits=...)`.
+   - [ ] Replace `set_proverbs`/`get_weather` with Composio FunctionTools (use ADK helper to wrap, preserving callbacks/state scaffolding).
+2. Add `.env.example` entry for `COMPOSIO_API_KEY`; update README Quickstart.
+3. Smoke test: run agent manually (`uvicorn agent.agent:app --reload`), send request via CopilotKit to verify `ToolCallStartEvent` references Composio slug.
 
 ---
 
-## 2. Tool Catalog & Policy Storage
+## 2. Tool Catalog & Connected Accounts (docs/arch.md §4.4, docs/requirements.md FR-003/FR-020)
 
-1. Introduce backend storage (temporary JSON file or Postgres) for tool metadata described in `docs/arch.md` §4.5.
-2. Schema should include: `tool_slug`, `app`, `json_schema`, `scopes`, `risk_default`, `rate_bucket`, `write_enabled`.
-3. Build sync job:
-   - [ ] Cron or manual command to refresh catalog from Composio (`composio.tools.get` / search filters).
-   - [ ] Compare hashes to detect schema drift.
-4. Expose REST endpoints:
-   - `GET /tools` (filter by risk/app).
-   - `PATCH /tools/{slug}` (toggle write permission, overrides risk/approval).
-5. Seed catalog with initial objectives (e.g., Gmail send, HubSpot update).
+- [ ] Create persistence layer (start with JSON/YAML stub; later Postgres) storing tool metadata: `slug`, `app`, `json_schema`, `scopes`, `risk_default`, `rate_bucket`, `write_allowed`.
+- [ ] Implement sync command (`scripts/sync_tools.py`) pulling from `composio.tools.get` and writing catalog.
+- [ ] Build connected account manager using `composio.connected_accounts.*` APIs; expose `/composio/connect`, `/composio/accounts` endpoints.
+- [ ] Update Integrations UI to read from catalog and list tools/status.
 
 ---
 
-## 3. Action Envelopes & Outbox Worker
+## 3. Data Layer & APIs (docs/arch.md §4.5, docs/requirements.md §4)
 
-1. Define database tables (see `docs/arch.md` §4.5 + §5) or temporary persistence for:
-   - `actions` (drafted envelopes from ADK planner).
-   - `outbox` (delivery queue + retry metadata).
-   - `audit_log`.
-2. Implement Python module `worker/outbox.py` (placeholder script referenced in `pyproject.toml`):
-   - [ ] Poll pending actions.
-   - [ ] Execute via Composio’s execution API (`composio.actions.run` or equivalent).
-   - [ ] Handle idempotency with `external_id`.
-   - [ ] Emit AGUI completion/exception events back to Runtime (HTTP callback or state update).
-3. Add retry/backoff using `tenacity` with rate-bucket awareness.
-4. Extend FastAPI service with endpoints:
-   - `POST /actions` (enqueue from UI).
-   - `POST /actions/{id}/approve|reject` (update approval state, push to Outbox).
-5. Unit tests for Outbox (simulate success/error, ensure audit log entry created).
+- [ ] Define database schema (SQL or migrations) for tenants, objectives, employees, guardrails, signals, tasks, actions, outbox, audit.
+- [ ] Implement FastAPI endpoints:
+  - Objectives (`POST/GET/PUT /objectives`).
+  - Guardrails (`PUT /guardrails`).
+  - Plan run trigger (`POST /plan/run` returning AGUI session info).
+  - Approvals (`POST /approvals`, `POST /approvals/bulk`).
+  - Activity (`GET /activity`, `GET /audit`).
+  - Tools (`GET /tools`, `PATCH /tools/{slug}`).
+- [ ] Integrate Supabase RLS policies or SQLAlchemy filters to enforce tenant isolation.
 
 ---
 
-## 4. Evidence Generation Pipeline
+## 4. Evidence Pipeline (docs/arch.md §4.4, docs/requirements.md FR-010/FR-011)
 
-1. Design Reader Kernel DSL (JSON/YAML) per `docs/arch.md` §6.
-2. Implement scheduler (APScheduler) tasks:
-   - `warm_scan` (run once post-connect).
-   - `trickle_refresh` (every 30–60 min, respects `rate_bucket`).
-3. Map kernel config → Composio read tool call.
-4. Store results in `signals` table with lean payloads.
-5. Update ADK agent prompt to inject signals → proposals.
-6. Build UI component to surface Evidence cards (counts/exemplars).
+- [ ] Define reader kernel DSL (YAML) with fields: `tool_slug`, `args`, `jsonpath_select`, `features`, `examples`.
+- [ ] Implement kernel executor using `composio.tools.execute` and `jsonpath-ng` to compute Signals.
+- [ ] Add APScheduler jobs for warm_scan (post-connect) and trickle_refresh (every 30–60m). Respect rate buckets.
+- [ ] Persist Signals + Evidence cards; expose to ADK agent via state injection and REST.
 
 ---
 
-## 5. UI Enhancements
+## 5. Planner Enhancements (docs/arch.md §5, `agent/agent.py`)
 
-1. **Desk page**:
-   - [ ] Replace placeholder content with `PlanCard` list generated from shared state.
-   - [ ] Implement `Approve all low-risk` button (calls backend batch API).
-   - [ ] Add drag-and-drop using `@dnd-kit/core` or similar (update assignee via API).
-2. **Approvals**:
-   - [ ] Create table view with filters.
-   - [ ] Wire edit modal to JSON schema from tool catalog (use `react-jsonschema-form` or custom renderer).
-3. **Integrations**:
-   - [ ] Connect to backend `/tools` endpoint to list toolkits, toggles, statuses.
-   - [ ] Implement JIT scope modal; POST to backend to trigger Composio scope upgrade.
-4. **Activity & Safety**:
-   - [ ] Timeline fed by Outbox statuses.
-   - [ ] Rate limit gauge (pull from stored metrics).
-   - [ ] Pause/Undo buttons hooking to backend.
-5. **Roster**:
-   - [ ] Display employees, trust score, capacity.
-   - [ ] Slide-over assignments editor.
-6. Ensure CopilotKit Sidecar renders AGUI event stream with mapping in `docs/ux.md` §5.
+- [ ] Update ADK agent prompt to include objectives, guardrails, and signals.
+- [ ] Emit structured state updates (plan cards, evidence references) via `callback_context.state` so CopilotKit UI can consume via `useCoAgent`.
+- [ ] Add compliance checks in `before_model_callback` (e.g., quiet hours) to prune invalid proposals pre-approval.
 
 ---
 
-## 6. Trust, Guardrails, and Analytics
+## 6. Schema-Driven UI (docs/ux.md §§4–6)
 
-1. Implement trust score service (daily roll-up of approvals/edits/errors).
-2. Enforce guardrails before Outbox dispatch (quiet hours, DNC list, write toggles).
-3. Instrument telemetry (per `docs/ux.md` §10) using either PostHog, Segment, or custom DB tables.
-4. Surface trust chip + autop-run badges in UI.
-5. Add audit endpoints for security persona (filter by employee/tool/date).
-
----
-
-## 7. Testing & Quality Gates
-
-- [ ] Python: Pytest suites for agent callbacks, Outbox, Composio sync, rate-limit scheduling.
-- [ ] JS/TS: Component tests for PlanCard, schema form, sidecar store; E2E smoke using Playwright.
-- [ ] Accessibility audit (axe, keyboard navigation).
-- [ ] Load test Outbox throughput (simulate burst of actions).
-- [ ] Disaster drills: Composio outage fallback (degrade to read-only), Outbox stuck scenario.
+- [ ] Build Desk, Approvals, Integrations, Activity & Safety, Hire/Roster pages.
+- [ ] Use generic card/table components; fetch data via REST + CopilotKit state.
+- [ ] Integrate `react-jsonschema-form` (or lightweight alternative) for editing action arguments. Validate before approval.
+- [ ] Implement JIT scope modal & flows tied to `/composio/connect` endpoints.
+- [ ] Add drag-and-drop (e.g., `@dnd-kit`) for Global Desk reassignment.
 
 ---
 
-## 8. Deployment Checklist
+## 7. Outbox Worker (docs/arch.md §4.4, docs/requirements.md FR-022)
 
-- Containerize FastAPI + Outbox worker; ensure `COMPOSIO_API_KEY` and `GOOGLE_API_KEY` mount securely.
-- Next.js deployed to Vercel/Edge with rewrites for `/api/copilotkit`.
-- Provision Postgres with RLS (Supabase or Cloud SQL), run migrations for actions/signals/audit tables.
-- Configure logging sinks (e.g., GCP Log Router, Datadog) fed by CopilotRuntime middleware + Outbox.
-- Set up alerting for run errors, Outbox DLQ backlog, Composio token expiry.
+- [ ] Create `worker/outbox.py` script invoked via `python -m worker.outbox`.
+- [ ] Implement queue polling with DB locking or message queue placeholder.
+- [ ] Execute actions via `composio.tools.execute`, passing `connected_account_id`, `external_id`, `arguments`.
+- [ ] Handle retries, DLQ, quiet hours, rate buckets. Update audit and Activity timeline.
+- [ ] Emit metrics (`outbox_delivery_seconds`, `outbox_failures_total`).
 
 ---
 
-## 9. Documentation Follow-ups
+## 8. Trust & Autonomy (docs/requirements.md FR-032, docs/ux.md §7)
 
-- Update README with architecture diagram (from `docs/arch.md`).
-- Produce operator guide referencing `docs/ux.md` flows.
-- Record Loom walkthrough once Desk + Approvals surfaces are interactive.
-- Maintain changelog per sprint with links to relevant sections in `docs/arch.md`/`docs/ux.md`.
+- [ ] Build trust ledger computations (daily job).
+- [ ] Auto-approve low-risk actions when trust > threshold; mark in audit.
+- [ ] Surfacing trust chip/trend in UI.
 
-This checklist should let Codex (or any contributor) work feature-by-feature while staying aligned with the validated architecture and UX.
+---
+
+## 9. Observability & Compliance (docs/observability.md, docs/threat-model.md)
+
+- [ ] Instrument CopilotRuntime and Outbox with OpenTelemetry metrics/traces.
+- [ ] Implement structured logging guidelines (hash PII).
+- [ ] Set up basic dashboards/alerts (temporary with console or hosted service).
+- [ ] Draft runbooks (Composio outage, Outbox DLQ) in `runbooks/`.
+
+---
+
+## 10. Testing & Hardening (docs/requirements.md §8, docs/nfr.md)
+
+- [ ] Pytest suites for planner, guardrails, Outbox (mock Composio).
+- [ ] Playwright E2E: connect flow (mock), warm scan injection, approval, JIT scope, Outbox completion.
+- [ ] Security tests for RLS, quiet hours, logging hygiene.
+- [ ] Load test Outbox throughput (simulate 100 queued actions) using Locust or custom script.
+
+---
+
+## 11. Launch Checklist
+
+- [ ] README + Makefile (or Taskfile) updated with commands (`make dev`, `make test`, `make outbox`).
+- [ ] `codex.yml` created with run/test commands, entrypoints, no-touch paths.
+- [ ] Production env provisioning plan (Supabase, deployment target) documented in `infra/` (future).
+- [ ] Handoff deck summarizing architecture, UX, runbooks.
+
+Keep this list synchronized with progress; update docs + ADRs when decisions shift. Codex should reference this file at task kickoff to avoid redundant planning.

@@ -1,0 +1,145 @@
+[2025-10-05T16:07:02.558839657+00:00] env: git origins: []
+[2025-10-05T16:07:02.559198408+00:00] env: GET https://chatgpt.com/backend-api/wham/environments
+[2025-10-05T16:07:04.944293263+00:00] env: status=200 OK content-type=application/json
+[2025-10-05T16:07:04.944566953+00:00] env: /environments JSON (pretty):
+[
+  {
+    "id": "68bafcb24144819188dcf6166018dae6",
+    "machine_id": "wham-public/wham-universal",
+    "label": "maxbaluev/b2b-voice-bot",
+    "is_pinned": false,
+    "description": "",
+    "workspace_dir": "/workspace",
+    "agent_network_access": {
+      "mode": "on",
+      "preset_allowlist": "all",
+      "allowlist_domains": "",
+      "safe_methods_only": null
+    },
+    "repos": [
+      "github-1025067446"
+    ],
+    "setup": "",
+    "maintenance_setup": "",
+    "repo_map": {
+      "github-1025067446": {
+        "id": "1025067446",
+        "name": "b2b-voice-bot",
+        "owner": {
+          "login": "maxbaluev",
+          "id": 9191176,
+          "type": "User",
+          "avatar_url": "https://avatars.githubusercontent.com/u/9191176?v=4",
+          "url": "https://api.github.com/users/maxbaluev"
+        },
+        "repository_full_name": "maxbaluev/b2b-voice-bot",
+        "clone_url": "https://github.com/maxbaluev/b2b-voice-bot.git",
+        "default_branch": "main",
+        "git_commits_url": "https://api.github.com/repos/maxbaluev/b2b-voice-bot/git/commits{/sha}",
+        "git_refs_url": "https://api.github.com/repos/maxbaluev/b2b-voice-bot/git/refs{/sha}",
+        "git_url": "git://github.com/maxbaluev/b2b-voice-bot.git",
+        "visibility": "private",
+        "allow_auto_merge": false,
+        "allow_merge_commit": true,
+        "allow_rebase_merge": true,
+        "allow_squash_merge": true,
+        "allow_update_branch": false,
+        "language": null,
+        "size": 9164,
+        "master_branch": null,
+        "permissions": null
+      }
+    },
+    "env_vars": {
+      "CODEX_ENV_PYTHON_VERSION": "3.12",
+      "CODEX_ENV_NODE_VERSION": "20",
+      "CODEX_ENV_RUBY_VERSION": "3.4.4",
+      "CODEX_ENV_RUST_VERSION": "1.89.0",
+      "CODEX_ENV_GO_VERSION": "1.24.3",
+      "CODEX_ENV_BUN_VERSION": "1.2.14",
+      "CODEX_ENV_PHP_VERSION": "8.4",
+      "CODEX_ENV_JAVA_VERSION": "21",
+      "CODEX_ENV_SWIFT_VERSION": "6.1"
+    },
+    "secrets": {},
+    "task_count": 0,
+    "creator_id": "user-HkWS8cYoQV4LKmcww9wC0ZRp",
+    "share_settings": "workspace",
+    "share_targets": [],
+    "permissions": {
+      "can_write": true,
+      "can_delete": true
+    },
+    "created_at": 1757084850.25528,
+    "auto_setup_settings": {
+      "use_auto_setup": true
+    },
+    "cache_settings": {
+      "post_setup_cache_enabled": true,
+      "cache_invalidation_key": ""
+    },
+    "etag": "\"c001f156-0000-0200-0000-68bafcb20000\""
+  },
+  {
+    "id": "6828d97173f48191926880312cfb9848",
+    "machine_id": "wham-public/wham-universal",
+    "label": "MindsightsAI/cmaquick",
+    "is_pinned": false,
+    "description": "",
+    "workspace_dir": "/workspace",
+    "agent_network_access": null,
+    "repos": [
+      "github-972112516"
+    ],
+    "setup": "",
+    "maintenance_setup": null,
+    "repo_map": {
+      "github-972112516": {
+        "id": "972112516",
+        "name": "cmaquick",
+        "owner": {
+          "login": "MindsightsAI",
+          "id": 143503621,
+          "type": "User",
+          "avatar_url": "https://avatars.githubusercontent.com/u/143503621?v=4",
+          "url": "https://api.github.com/users/MindsightsAI"
+        },
+        "repository_full_name": "MindsightsAI/cmaquick",
+        "clone_url": "https://github.com/MindsightsAI/cmaquick.git",
+        "default_branch": "main",
+        "git_commits_url": "https://api.github.com/repos/MindsightsAI/cmaquick/git/commits{/sha}",
+        "git_refs_url": "https://api.github.com/repos/MindsightsAI/cmaquick/git/refs{/sha}",
+        "git_url": "git://github.com/MindsightsAI/cmaquick.git",
+        "visibility": "private",
+        "allow_auto_merge": false,
+        "allow_merge_commit": true,
+        "allow_rebase_merge": true,
+        "allow_squash_merge": true,
+        "allow_update_branch": false,
+        "language": null,
+        "size": 14081,
+        "master_branch": null,
+        "permissions": null
+      }
+    },
+    "env_vars": {},
+    "secrets": {},
+    "task_count": 6,
+    "creator_id": "user-HkWS8cYoQV4LKmcww9wC0ZRp",
+    "share_settings": "workspace",
+    "share_targets": [],
+    "permissions": {
+      "can_write": true,
+      "can_delete": true
+    },
+    "created_at": 1747507569.453165,
+    "auto_setup_settings": null,
+    "cache_settings": {
+      "post_setup_cache_enabled": true,
+      "cache_invalidation_key": ""
+    },
+    "etag": "\"16027b96-0000-0200-0000-68bafc820000\""
+  }
+]
+[2025-10-05T16:07:04.945053903+00:00] env: selecting by task_count/first: 6828d97173f48191926880312cfb9848
+[2025-10-05T16:07:06.911197068+00:00] new_task: create failed env=6828d97173f48191926880312cfb9848 prompt_chars=1553: POST https://chatgpt.com/backend-api/wham/tasks failed: 403 Forbidden; content-type=application/json; body={"detail":{"type":"repo_not_accessible","message":"Repository is not accessible"}}
