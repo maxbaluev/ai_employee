@@ -1,42 +1,101 @@
 # Building New UI Surfaces
 
-**Status:** Planned
+**Status:** Implemented (scaffold + shared state demo) · In progress (productised
+surfaces) · Planned (Supabase-backed data fetch)
 
-Use this checklist whenever you introduce a new customer-facing surface (Desk,
-Approvals, Integrations, Activity & Safety). The goal is to keep UX consistent while the
-backend evolves.
+Use this guide whenever you introduce a new customer-facing surface (Desk, Approvals,
+Integrations, Activity & Safety). The patterns below codify what we learned from the
+CopilotKit examples in `libs_docs/copilotkit_examples/` and the ADK integration docs in
+`libs_docs/copilotkit_docs/adk/`.
 
-## 1. Define the State Contract
+## 1. Shape Shared State Intentionally
 
-- Add a new slice to the agent state (e.g. `desk.queue`, `approvals.forms`).
-- Document the schema in `agent/state_contract.md` (create the file when the first real
-  surface ships).
-- Emit `StateDeltaEvent` updates whenever the agent mutates the slice.
+- Create a focused state slice per surface (e.g. `desk.queue`, `approvals.drafts`).
+- Register the slice with `useCoAgent` and keep it serialisable; ADK replicates it across
+  the Copilot runtime.
+- Document the schema in `agent/state_contract.md` and reference the shared-state
+  patterns in `libs_docs/copilotkit_docs/adk/shared-state/index.mdx` for bidirectional
+  updates.
+- Emit `StateDeltaEvent` updates whenever the agent mutates the slice so UI optimism and
+  replay remain deterministic.
 
-## 2. Build the React Surface
+```tsx
+"use client";
 
-- Place components under `src/app/(desk)/` etc. using the App Router.
-- Hydrate initial data from REST endpoints (once Supabase exists) and subscribe to
-  shared state for live updates.
-- Provide empty states and error boundaries – operators must understand what to do next.
+import { useCoAgent } from "@copilotkit/react-core";
 
-## 3. Wire Approvals & Actions
+type QueueItem = {
+  id: string;
+  title: string;
+  evidence: string[];
+  status: "pending" | "approved" | "rejected";
+};
 
-- For edit/approve flows, render JSON Schema via a generic form component and submit the
-  edited payload back to the control plane.
-- All destructive actions must require confirmation and emit an audit event.
+export function DeskState() {
+  const { state } = useCoAgent<{ queue: QueueItem[] }>({
+    name: "desk",
+    initialState: { queue: [] },
+  });
 
-## 4. Accessibility & UX
+  return state.queue;
+}
+```
 
-- Meet WCAG AA contrast for every card and button.
-- Keyboard navigation must work (CopilotKit surfaces full keyboard support out-of-the-box; keep it intact).
-- Provide inline help (hover or info icon) that links back to this documentation when the
-  action is non-trivial.
+## 2. Compose the React Surface
 
-## 5. Verification
+- Place App Router routes under `src/app/(desk)/`, `src/app/(approvals)/`, etc. to keep
+  layout boundaries clean.
+- Use `CopilotSidebar`, `CopilotComposer`, and `CopilotTaskList` from `@copilotkit/react-ui`
+  for consistency with the examples under `libs_docs/copilotkit_examples/`.
+- Hydrate initial data from REST endpoints (Supabase once available) and merge subsequent
+  updates from shared state.
+- Lean on the generative UI primitives outlined in
+  `libs_docs/copilotkit_docs/adk/generative-ui/index.mdx` for cards, tables, and inline
+  summaries instead of bespoke components.
 
-- Add Playwright coverage for the new surface.
-- Include screenshots or short demos in the PR to capture UX decisions.
+```tsx
+import { CopilotSidebar } from "@copilotkit/react-ui";
 
-Once the first surface lands, update this document with concrete examples and code
-snippets.
+export function DeskShell({ children }: { children: React.ReactNode }) {
+  return (
+    <CopilotSidebar className="max-w-sm border-l bg-slate-900">
+      {children}
+    </CopilotSidebar>
+  );
+}
+```
+
+## 3. Wire Human-in-the-Loop Controls
+
+- Render JSON Schema forms for approvals using a generic renderer; see
+  `docs/implementation/composio-tooling.md` for schema sourcing and
+  `libs_docs/copilotkit_docs/adk/human-in-the-loop/index.mdx` for agent-side HITL
+  patterns.
+- When the agent requests confirmation (e.g. `requireHumanApproval` action), surface a
+  modal or drawer that captures the operator's choice and emits a follow-up action to the
+  agent.
+- Log every approval decision through the shared state so callbacks and audit services
+  remain the source of truth.
+
+## 4. UX & Accessibility Checklist
+
+- Meet WCAG AA contrast for every card and button; copy CopilotKit's token palette where
+  possible instead of inventing new colors.
+- Keyboard navigation must stay intact—avoid trapping focus inside custom drawers.
+- Provide inline help (hover or info icon) that links back to the relevant doc section
+  whenever the action is non-trivial.
+- Keep latency visible. The CopilotKit progress components in
+  `libs_docs/copilotkit_examples/Dockerfile.ui` demos show how to wire spinners and
+  transcripts without blocking the sidebar.
+
+## 5. Verification Before Merge
+
+- Add Playwright coverage for the new surface, following the patterns in
+  `libs_docs/copilotkit_examples/`.
+- Capture one screenshot per critical flow and attach it to the PR for asynchronous UX
+  review.
+- Run an exploratory pass in the browser (use the CLI browser tooling) to validate that
+  shared state, actions, and HITL flows behave as expected.
+
+Update this document as soon as the first production surface lands, including concrete
+state schemas and Playwright snippets.

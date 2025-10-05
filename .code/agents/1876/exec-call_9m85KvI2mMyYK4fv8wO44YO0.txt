@@ -1,0 +1,836 @@
+docs/architecture/composio-execution.md:35:Agent (google.adk)
+docs/architecture/overview.md:18: ├─ Wraps google.adk `LlmAgent`
+docs/architecture/agent-control-plane.md:8:- `agent/agent.py` declares `proverbs_agent`, a `google.adk.agents.LlmAgent` with:
+tests/agent/test_guardrails.py:6:from google.adk.agents.callback_context import CallbackContext
+tests/agent/test_guardrails.py:7:from google.adk.models import LlmResponse
+agent/agents/proverbs.py:8:    from google.adk.agents import LlmAgent
+agent/agents/proverbs.py:9:    from google.adk.tools import ToolContext
+agent/callbacks/after.py:8:    from google.adk.agents.callback_context import CallbackContext
+agent/callbacks/after.py:9:    from google.adk.models import LlmResponse
+agent/callbacks/guardrails.py:9:    from google.adk.agents.callback_context import CallbackContext
+agent/callbacks/before.py:9:    from google.adk.agents.callback_context import CallbackContext
+agent/callbacks/before.py:10:    from google.adk.models import LlmRequest, LlmResponse
+libs_docs/copilotkit_docs/adk/generative-ui/tool-based.mdx:47:        from google.adk.agents import LlmAgent
+libs_docs/copilotkit_docs/adk/generative-ui/agentic.mdx:69:        from google.adk.agents import LlmAgent
+libs_docs/copilotkit_docs/adk/generative-ui/agentic.mdx:70:        from google.adk.agents.callback_context import CallbackContext
+libs_docs/copilotkit_docs/adk/generative-ui/agentic.mdx:71:        from google.adk.tools import ToolContext
+libs_docs/copilotkit_docs/adk/generative-ui/agentic.mdx:72:        from google.adk.models import LlmResponse, LlmRequest
+libs_docs/copilotkit_docs/adk/quickstart.mdx:128:                from google.adk.agents import LlmAgent
+libs_docs/copilotkit_docs/adk/human-in-the-loop/agent.mdx:110:        from google.adk.agents import LlmAgent
+libs_docs/copilotkit_docs/adk/frontend-actions.mdx:95:                from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:90:from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:91:from google.adk.tools import google_search
+libs_docs/adk/full_llm_docs.txt:107:from google.adk.agents import LlmAgent, BaseAgent
+libs_docs/adk/full_llm_docs.txt:172:A Custom Agent is essentially any class you create that inherits from `google.adk.agents.BaseAgent` and implements its core execution logic within the `_run_async_impl` asynchronous method. You have complete control over how this method calls other agents (sub-agents), manages state, and handles events. 
+libs_docs/adk/full_llm_docs.txt:588:        from google.adk.agents import LlmAgent, BaseAgent, LoopAgent, SequentialAgent
+libs_docs/adk/full_llm_docs.txt:589:        from google.adk.agents.invocation_context import InvocationContext
+libs_docs/adk/full_llm_docs.txt:591:        from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:592:        from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:593:        from google.adk.events import Event
+libs_docs/adk/full_llm_docs.txt:1177:        from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:1178:        from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:1179:        from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:1439:    from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:1478:    *   **Anthropic SDK Classes (Transitive):** The Java ADK's `com.google.adk.models.Claude` wrapper relies on classes from Anthropic's official Java SDK. These are typically included as **transitive dependencies**.
+libs_docs/adk/full_llm_docs.txt:1485:Instantiate `com.google.adk.models.Claude`, providing the desired Claude model name and an `AnthropicOkHttpClient` configured with your API key. Then, pass this `Claude` instance to your `LlmAgent`.
+libs_docs/adk/full_llm_docs.txt:1535:        from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:1536:        from google.adk.models.lite_llm import LiteLlm
+libs_docs/adk/full_llm_docs.txt:1765:    from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:1766:    from google.adk.models.lite_llm import LiteLlm
+libs_docs/adk/full_llm_docs.txt:1847:from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:1874:from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:1923:        from google.adk.models.anthropic_llm import Claude
+libs_docs/adk/full_llm_docs.txt:1924:        from google.adk.models.registry import LLMRegistry
+libs_docs/adk/full_llm_docs.txt:1932:       from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:1933:       from google.adk.models.anthropic_llm import Claude # Import needed for registration
+libs_docs/adk/full_llm_docs.txt:1934:       from google.adk.models.registry import LLMRegistry # Import needed for registration
+libs_docs/adk/full_llm_docs.txt:1956:    **Integration Method:** Directly instantiate the provider-specific model class (e.g., `com.google.adk.models.Claude`) and configure it with a Vertex AI backend.
+libs_docs/adk/full_llm_docs.txt:2009:    from google.adk.agents import LlmAgent, BaseAgent
+libs_docs/adk/full_llm_docs.txt:2046:    from google.adk.agents import SequentialAgent, LlmAgent
+libs_docs/adk/full_llm_docs.txt:2067:    from google.adk.agents import ParallelAgent, LlmAgent
+libs_docs/adk/full_llm_docs.txt:2089:      from google.adk.agents import LoopAgent, LlmAgent, BaseAgent
+libs_docs/adk/full_llm_docs.txt:2090:      from google.adk.events import Event, EventActions
+libs_docs/adk/full_llm_docs.txt:2091:      from google.adk.agents.invocation_context import InvocationContext
+libs_docs/adk/full_llm_docs.txt:2132:    from google.adk.agents import LlmAgent, SequentialAgent
+libs_docs/adk/full_llm_docs.txt:2159:    from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:2194:    from google.adk.agents import LlmAgent, BaseAgent
+libs_docs/adk/full_llm_docs.txt:2195:    from google.adk.tools import agent_tool
+libs_docs/adk/full_llm_docs.txt:2247:    from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:2280:    from google.adk.agents import SequentialAgent, LlmAgent
+libs_docs/adk/full_llm_docs.txt:2311:    from google.adk.agents import SequentialAgent, ParallelAgent, LlmAgent
+libs_docs/adk/full_llm_docs.txt:2350:    from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:2351:    from google.adk.tools import agent_tool
+libs_docs/adk/full_llm_docs.txt:2395:    from google.adk.agents import SequentialAgent, LlmAgent
+libs_docs/adk/full_llm_docs.txt:2436:    from google.adk.agents import LoopAgent, LlmAgent, BaseAgent
+libs_docs/adk/full_llm_docs.txt:2437:    from google.adk.events import Event, EventActions
+libs_docs/adk/full_llm_docs.txt:2438:    from google.adk.agents.invocation_context import InvocationContext
+libs_docs/adk/full_llm_docs.txt:2490:    from google.adk.agents import LlmAgent, SequentialAgent
+libs_docs/adk/full_llm_docs.txt:2491:    from google.adk.tools import FunctionTool
+libs_docs/adk/full_llm_docs.txt:2633:        from google.adk.agents import LoopAgent, LlmAgent, BaseAgent, SequentialAgent
+libs_docs/adk/full_llm_docs.txt:2635:        from google.adk.runners import InMemoryRunner
+libs_docs/adk/full_llm_docs.txt:2636:        from google.adk.agents.invocation_context import InvocationContext
+libs_docs/adk/full_llm_docs.txt:2637:        from google.adk.tools.tool_context import ToolContext
+libs_docs/adk/full_llm_docs.txt:2639:        from google.adk.events import Event, EventActions
+libs_docs/adk/full_llm_docs.txt:3102:*   **Persistence & Management:** Artifacts are not stored directly within the agent or session state. Their storage and retrieval are managed by a dedicated **Artifact Service** (an implementation of `BaseArtifactService`, defined in `google.adk.artifacts`. ADK provides various implementations, such as:
+libs_docs/adk/full_llm_docs.txt:3103:    *   An in-memory service for testing or temporary storage (e.g., `InMemoryArtifactService` in Python, defined in `google.adk.artifacts.in_memory_artifact_service.py`).
+libs_docs/adk/full_llm_docs.txt:3104:    *   A service for persistent storage using Google Cloud Storage (GCS) (e.g., `GcsArtifactService` in Python, defined in `google.adk.artifacts.gcs_artifact_service.py`).
+libs_docs/adk/full_llm_docs.txt:3168:    from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:3169:    from google.adk.artifacts import InMemoryArtifactService # Or GcsArtifactService
+libs_docs/adk/full_llm_docs.txt:3170:    from google.adk.agents import LlmAgent # Any agent
+libs_docs/adk/full_llm_docs.txt:3171:    from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:3287:    from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:3288:    from google.adk.artifacts import InMemoryArtifactService # Or GcsArtifactService
+libs_docs/adk/full_llm_docs.txt:3289:    from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:3290:    from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:3326:        from google.adk.agents.callback_context import CallbackContext # Or ToolContext
+libs_docs/adk/full_llm_docs.txt:3366:        from google.adk.agents.callback_context import CallbackContext # Or ToolContext
+libs_docs/adk/full_llm_docs.txt:3413:        from google.adk.tools.tool_context import ToolContext
+libs_docs/adk/full_llm_docs.txt:3433:        # from google.adk.tools import FunctionTool
+libs_docs/adk/full_llm_docs.txt:3464:        from google.adk.artifacts import InMemoryArtifactService
+libs_docs/adk/full_llm_docs.txt:3496:        from google.adk.artifacts import GcsArtifactService
+libs_docs/adk/full_llm_docs.txt:3652:        from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:3653:        from google.adk.agents.callback_context import CallbackContext
+libs_docs/adk/full_llm_docs.txt:3654:        from google.adk.models import LlmResponse, LlmRequest
+libs_docs/adk/full_llm_docs.txt:3721:from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:3722:from google.adk.agents.callback_context import CallbackContext
+libs_docs/adk/full_llm_docs.txt:3723:from google.adk.models import LlmResponse, LlmRequest
+libs_docs/adk/full_llm_docs.txt:3724:from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:3727:from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:3834:        from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:3835:        from google.adk.agents.callback_context import CallbackContext
+libs_docs/adk/full_llm_docs.txt:3836:        from google.adk.models import LlmResponse, LlmRequest
+libs_docs/adk/full_llm_docs.txt:3837:        from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:3840:        from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:3986:        from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:3987:        from google.adk.agents.callback_context import CallbackContext
+libs_docs/adk/full_llm_docs.txt:3988:        from google.adk.runners import InMemoryRunner # Use InMemoryRunner
+libs_docs/adk/full_llm_docs.txt:4153:        from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:4154:        from google.adk.agents.callback_context import CallbackContext
+libs_docs/adk/full_llm_docs.txt:4155:        from google.adk.runners import InMemoryRunner # Use InMemoryRunner
+libs_docs/adk/full_llm_docs.txt:4314:        from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:4315:        from google.adk.agents.callback_context import CallbackContext
+libs_docs/adk/full_llm_docs.txt:4316:        from google.adk.models import LlmResponse, LlmRequest
+libs_docs/adk/full_llm_docs.txt:4317:        from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:4320:        from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:4444:        from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:4445:        from google.adk.agents.callback_context import CallbackContext
+libs_docs/adk/full_llm_docs.txt:4446:        from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:4449:        from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:4450:        from google.adk.models import LlmResponse
+libs_docs/adk/full_llm_docs.txt:4584:        from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:4585:        from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:4588:        from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:4589:        from google.adk.tools import FunctionTool
+libs_docs/adk/full_llm_docs.txt:4590:        from google.adk.tools.tool_context import ToolContext
+libs_docs/adk/full_llm_docs.txt:4591:        from google.adk.tools.base_tool import BaseTool
+libs_docs/adk/full_llm_docs.txt:4704:        from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:4705:        from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:4708:        from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:4709:        from google.adk.tools import FunctionTool
+libs_docs/adk/full_llm_docs.txt:4710:        from google.adk.tools.tool_context import ToolContext
+libs_docs/adk/full_llm_docs.txt:4711:        from google.adk.tools.base_tool import BaseTool
+libs_docs/adk/full_llm_docs.txt:4979:        from google.adk.agents import BaseAgent
+libs_docs/adk/full_llm_docs.txt:4980:        from google.adk.agents.invocation_context import InvocationContext
+libs_docs/adk/full_llm_docs.txt:4981:        from google.adk.events import Event
+libs_docs/adk/full_llm_docs.txt:5007:        from google.adk.agents import ReadonlyContext
+libs_docs/adk/full_llm_docs.txt:5032:        from google.adk.agents.callback_context import CallbackContext
+libs_docs/adk/full_llm_docs.txt:5033:        from google.adk.models import LlmRequest
+libs_docs/adk/full_llm_docs.txt:5066:        from google.adk.tools import ToolContext
+libs_docs/adk/full_llm_docs.txt:5111:        from google.adk.tools import ToolContext
+libs_docs/adk/full_llm_docs.txt:5124:        from google.adk.agents.callback_context import CallbackContext
+libs_docs/adk/full_llm_docs.txt:5143:        from google.adk.tools import ToolContext
+libs_docs/adk/full_llm_docs.txt:5163:        from google.adk.agents.callback_context import CallbackContext
+libs_docs/adk/full_llm_docs.txt:5195:        from google.adk.tools import ToolContext
+libs_docs/adk/full_llm_docs.txt:5225:        from google.adk.tools import ToolContext # Or CallbackContext
+libs_docs/adk/full_llm_docs.txt:5253:               from google.adk.agents import CallbackContext # Or ToolContext
+libs_docs/adk/full_llm_docs.txt:5284:            from google.adk.tools import ToolContext
+libs_docs/adk/full_llm_docs.txt:5347:        from google.adk.tools import ToolContext
+libs_docs/adk/full_llm_docs.txt:5370:from google.adk.tools import ToolContext
+libs_docs/adk/full_llm_docs.txt:5371:from google.adk.auth import AuthConfig # Assume appropriate AuthConfig is defined
+libs_docs/adk/full_llm_docs.txt:5427:from google.adk.tools import ToolContext
+libs_docs/adk/full_llm_docs.txt:5453:from google.adk.agents import BaseAgent
+libs_docs/adk/full_llm_docs.txt:5454:from google.adk.agents.invocation_context import InvocationContext
+libs_docs/adk/full_llm_docs.txt:5455:from google.adk.events import Event
+libs_docs/adk/full_llm_docs.txt:5650:from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:6039:        from google.adk.cli.fast_api import get_fast_api_app
+libs_docs/adk/full_llm_docs.txt:6185:             <groupId>com.google.adk</groupId>
+libs_docs/adk/full_llm_docs.txt:6190:             <groupId>com.google.adk</groupId>
+libs_docs/adk/full_llm_docs.txt:6201:            <mainClass>com.google.adk.web.AdkWebServer</mainClass>
+libs_docs/adk/full_llm_docs.txt:6228:            "-Dexec.mainClass=com.google.adk.web.AdkWebServer", \
+libs_docs/adk/full_llm_docs.txt:6471:    from google.adk.cli.fast_api import get_fast_api_app
+libs_docs/adk/full_llm_docs.txt:7362:from google.adk.evaluation.agent_evaluator import AgentEvaluator
+libs_docs/adk/full_llm_docs.txt:7417:    Technically, it's an instance of the `google.adk.events.Event` class, which builds upon the basic `LlmResponse` structure by adding essential ADK-specific metadata and an `actions` payload.
+libs_docs/adk/full_llm_docs.txt:7421:    # from google.adk.events import Event, EventActions
+libs_docs/adk/full_llm_docs.txt:7441:    In Java, this is an instance of the `com.google.adk.events.Event` class. It also builds upon a basic response structure by adding essential ADK-specific metadata and an `actions` payload.
+libs_docs/adk/full_llm_docs.txt:8037:        <groupId>com.google.adk</groupId>
+libs_docs/adk/full_llm_docs.txt:8044:        <groupId>com.google.adk</groupId>
+libs_docs/adk/full_llm_docs.txt:8057:        implementation 'com.google.adk:google-adk:0.1.0'
+libs_docs/adk/full_llm_docs.txt:8058:        implementation 'com.google.adk:google-adk-dev:0.1.0'
+libs_docs/adk/full_llm_docs.txt:8161:    from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:8444:            -Dexec.mainClass="com.google.adk.web.AdkWebServer" \
+libs_docs/adk/full_llm_docs.txt:8660:    -Dexec.mainClass="com.google.adk.web.AdkWebServer" \
+libs_docs/adk/full_llm_docs.txt:8714:  <groupId>com.google.adk.samples</groupId>
+libs_docs/adk/full_llm_docs.txt:8747:      <groupId>com.google.adk</groupId>
+libs_docs/adk/full_llm_docs.txt:8897:from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:8898:from google.adk.tools import google_search  # Import the tool
+libs_docs/adk/full_llm_docs.txt:9079:    2025-05-13T23:32:08.980-06:00  INFO 37864 --- [ebServer.main()] com.google.adk.web.AdkWebServer          : Started AdkWebServer in 1.15 seconds (process running for 2.877)
+libs_docs/adk/full_llm_docs.txt:9080:    2025-05-13T23:32:08.981-06:00  INFO 37864 --- [ebServer.main()] com.google.adk.web.AdkWebServer          : AdkWebServer application started successfully.
+libs_docs/adk/full_llm_docs.txt:9256:        <groupId>com.google.adk</groupId>
+libs_docs/adk/full_llm_docs.txt:9264:        implementation 'com.google.adk:google-adk:0.1.0'
+libs_docs/adk/full_llm_docs.txt:9477:from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:9478:from google.adk.runners import InMemoryRunner
+libs_docs/adk/full_llm_docs.txt:9612:from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:9613:from google.adk.runners import InMemoryRunner
+libs_docs/adk/full_llm_docs.txt:9809:      * **Function:** Manages the overall Event Loop, receives events yielded by the Execution Logic, coordinates with Services to process and commit event actions (state/artifact changes), and forwards processed events upstream (e.g., to the UI). It essentially drives the conversation turn by turn based on yielded events. (Defined in `google.adk.runners.runner`).
+libs_docs/adk/full_llm_docs.txt:10594:    from google.adk.memory import InMemoryMemoryService
+libs_docs/adk/full_llm_docs.txt:10608:    from google.adk.memory import VertexAiRagMemoryService
+libs_docs/adk/full_llm_docs.txt:10643:    from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:10644:    from google.adk.sessions import InMemorySessionService, Session
+libs_docs/adk/full_llm_docs.txt:10645:    from google.adk.memory import InMemoryMemoryService # Import MemoryService
+libs_docs/adk/full_llm_docs.txt:10646:    from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:10647:    from google.adk.tools import load_memory # Tool to query memory
+libs_docs/adk/full_llm_docs.txt:10751:`Session` object (`google.adk.sessions.Session`). This object acts as the
+libs_docs/adk/full_llm_docs.txt:10776:        from google.adk.sessions import InMemorySessionService, Session
+libs_docs/adk/full_llm_docs.txt:10846:            from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:10873:           from google.adk.sessions import VertexAiSessionService
+libs_docs/adk/full_llm_docs.txt:10901:    from google.adk.sessions import DatabaseSessionService
+libs_docs/adk/full_llm_docs.txt:11026:    from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:11027:    from google.adk.sessions import InMemorySessionService, Session
+libs_docs/adk/full_llm_docs.txt:11028:    from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:11081:    from google.adk.sessions import InMemorySessionService, Session
+libs_docs/adk/full_llm_docs.txt:11082:    from google.adk.events import Event, EventActions
+libs_docs/adk/full_llm_docs.txt:11151:    from google.adk.agents import CallbackContext # or ToolContext
+libs_docs/adk/full_llm_docs.txt:11337:from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:11338:from google.adk.tools import google_search  # Import the tool
+libs_docs/adk/full_llm_docs.txt:11438:from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:11439:from google.adk.agents import LiveRequestQueue
+libs_docs/adk/full_llm_docs.txt:11440:from google.adk.agents.run_config import RunConfig
+libs_docs/adk/full_llm_docs.txt:11441:from google.adk.sessions.in_memory_session_service import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:12103:from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:12104:from google.adk.tools import google_search  # Import the tool
+libs_docs/adk/full_llm_docs.txt:12883:        import google.adk
+libs_docs/adk/full_llm_docs.txt:12888:            from google.adk.version import __version__
+libs_docs/adk/full_llm_docs.txt:12899:        ('google.adk.agents', 'Agent, LiveRequestQueue'),
+libs_docs/adk/full_llm_docs.txt:12900:        ('google.adk.runners', 'InMemoryRunner'),
+libs_docs/adk/full_llm_docs.txt:12930:        from google.adk.agents import LiveRequestQueue
+libs_docs/adk/full_llm_docs.txt:13004:    ✓ Import: google.adk.agents
+libs_docs/adk/full_llm_docs.txt:13005:    ✓ Import: google.adk.runners
+libs_docs/adk/full_llm_docs.txt:13144:from google.adk.agents import LiveRequestQueue
+libs_docs/adk/full_llm_docs.txt:13145:from google.adk.agents.llm_agent import Agent
+libs_docs/adk/full_llm_docs.txt:13146:from google.adk.tools.function_tool import FunctionTool
+libs_docs/adk/full_llm_docs.txt:13333:      from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_credential
+libs_docs/adk/full_llm_docs.txt:13334:      from google.adk.tools.apihub_tool.apihub_toolset import APIHubToolset
+libs_docs/adk/full_llm_docs.txt:13352:      from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
+libs_docs/adk/full_llm_docs.txt:13356:      from google.adk.auth import AuthCredential
+libs_docs/adk/full_llm_docs.txt:13357:      from google.adk.auth import AuthCredentialTypes
+libs_docs/adk/full_llm_docs.txt:13358:      from google.adk.auth import OAuth2Auth
+libs_docs/adk/full_llm_docs.txt:13392:      from google.adk.tools.openapi_tool.auth.auth_helpers import service_account_dict_to_scheme_credential
+libs_docs/adk/full_llm_docs.txt:13393:      from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
+libs_docs/adk/full_llm_docs.txt:13413:      from google.adk.auth.auth_schemes import OpenIdConnectWithConfig
+libs_docs/adk/full_llm_docs.txt:13414:      from google.adk.auth.auth_credential import AuthCredential, AuthCredentialTypes, OAuth2Auth
+libs_docs/adk/full_llm_docs.txt:13415:      from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
+libs_docs/adk/full_llm_docs.txt:13446:from google.adk.tools.google_api_tool import calendar_tool_set
+libs_docs/adk/full_llm_docs.txt:13519:from google.adk.events import Event
+libs_docs/adk/full_llm_docs.txt:13520:from google.adk.auth import AuthConfig # Import necessary type
+libs_docs/adk/full_llm_docs.txt:13663:from google.adk.tools import FunctionTool, ToolContext
+libs_docs/adk/full_llm_docs.txt:13817:         from google.adk.auth.auth_schemes import OpenIdConnectWithConfig
+libs_docs/adk/full_llm_docs.txt:13818:         from google.adk.auth.auth_credential import AuthCredential, AuthCredentialTypes, OAuth2Auth
+libs_docs/adk/full_llm_docs.txt:13819:         from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
+libs_docs/adk/full_llm_docs.txt:13820:         from google.adk.agents.llm_agent import LlmAgent
+libs_docs/adk/full_llm_docs.txt:13895:         from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
+libs_docs/adk/full_llm_docs.txt:13896:         from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:13897:         from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:14047:         from google.adk.auth import AuthConfig
+libs_docs/adk/full_llm_docs.txt:14048:         from google.adk.events import Event
+libs_docs/adk/full_llm_docs.txt:14293:1. **Import:** Import the desired tool from the tools module. This is `agents.tools` in Python or `com.google.adk.tools` in Java.
+libs_docs/adk/full_llm_docs.txt:14331:    from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:14332:    from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:14333:    from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:14334:    from google.adk.tools import google_search
+libs_docs/adk/full_llm_docs.txt:14403:    from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:14404:    from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:14405:    from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:14406:    from google.adk.code_executors import BuiltInCodeExecutor
+libs_docs/adk/full_llm_docs.txt:14524:from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:14525:from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:14526:from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:14528:from google.adk.tools import VertexAiSearchTool
+libs_docs/adk/full_llm_docs.txt:14647:from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:14648:from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:14649:from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:14650:from google.adk.tools.bigquery import BigQueryCredentialsConfig
+libs_docs/adk/full_llm_docs.txt:14651:from google.adk.tools.bigquery import BigQueryToolset
+libs_docs/adk/full_llm_docs.txt:14652:from google.adk.tools.bigquery.config import BigQueryToolConfig
+libs_docs/adk/full_llm_docs.txt:14653:from google.adk.tools.bigquery.config import WriteMode
+libs_docs/adk/full_llm_docs.txt:14730:    from google.adk.tools import agent_tool
+libs_docs/adk/full_llm_docs.txt:14731:    from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:14732:    from google.adk.tools import google_search
+libs_docs/adk/full_llm_docs.txt:14733:    from google.adk.code_executors import BuiltInCodeExecutor
+libs_docs/adk/full_llm_docs.txt:14888:        from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:14889:        from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:14890:        from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:15039:      @com.google.adk.tools.Annotations.Schema(name = "toolContext") ToolContext toolContext
+libs_docs/adk/full_llm_docs.txt:15094:    from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:15095:    from google.adk.events import Event
+libs_docs/adk/full_llm_docs.txt:15096:    from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:15097:    from google.adk.tools import LongRunningFunctionTool
+libs_docs/adk/full_llm_docs.txt:15098:    from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:15291:        from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:15292:        from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:15293:        from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:15294:        from google.adk.tools.agent_tool import AgentTool
+libs_docs/adk/full_llm_docs.txt:15440:    from google.adk.tools.openapi_tool.auth.auth_helpers import token_to_scheme_credential
+libs_docs/adk/full_llm_docs.txt:15441:    from google.adk.tools.apihub_tool.apihub_toolset import APIHubToolset
+libs_docs/adk/full_llm_docs.txt:15474:    from google.adk.agents.llm_agent import LlmAgent
+libs_docs/adk/full_llm_docs.txt:15576:    from google.adk.tools.application_integration_tool.application_integration_toolset import ApplicationIntegrationToolset
+libs_docs/adk/full_llm_docs.txt:15599:    from google.adk.tools.application_integration_tool.application_integration_toolset import ApplicationIntegrationToolset
+libs_docs/adk/full_llm_docs.txt:15600:    from google.adk.tools.openapi_tool.auth.auth_helpers import dict_to_auth_scheme
+libs_docs/adk/full_llm_docs.txt:15601:    from google.adk.auth import AuthCredential
+libs_docs/adk/full_llm_docs.txt:15602:    from google.adk.auth import AuthCredentialTypes
+libs_docs/adk/full_llm_docs.txt:15603:    from google.adk.auth import OAuth2Auth
+libs_docs/adk/full_llm_docs.txt:15650:    from google.adk.agents.llm_agent import LlmAgent
+libs_docs/adk/full_llm_docs.txt:15705:    from google.adk.agents.llm_agent import LlmAgent
+libs_docs/adk/full_llm_docs.txt:15775:from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:15890:    from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:15891:    from google.adk.tools import FunctionTool
+libs_docs/adk/full_llm_docs.txt:15892:    from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:15893:    from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:16018:    from google.adk.tools import ToolContext, FunctionTool
+libs_docs/adk/full_llm_docs.txt:16075:    from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:16076:    from google.adk.tools import FunctionTool
+libs_docs/adk/full_llm_docs.txt:16077:    from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:16078:    from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:16079:    from google.adk.tools import ToolContext
+libs_docs/adk/full_llm_docs.txt:16198:    from google.adk.tools import ToolContext, FunctionTool
+libs_docs/adk/full_llm_docs.txt:16340:Beyond individual tools, ADK introduces the concept of a **Toolset** via the `BaseToolset` interface (defined in `google.adk.tools.base_toolset`). A toolset allows you to manage and provide a collection of `BaseTool` instances, often dynamically, to an agent.
+libs_docs/adk/full_llm_docs.txt:16518:from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:16519:from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
+libs_docs/adk/full_llm_docs.txt:16612:from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:16613:from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
+libs_docs/adk/full_llm_docs.txt:16699:2.  Implement the MCP server's `@app.list_tools()` handler to advertise the ADK tool(s). This involves converting the ADK tool definition to the MCP schema using the `adk_to_mcp_tool_type` utility from `google.adk.tools.mcp_tool.conversion_utils`.
+libs_docs/adk/full_llm_docs.txt:16736:from google.adk.tools.function_tool import FunctionTool
+libs_docs/adk/full_llm_docs.txt:16737:from google.adk.tools.load_web_page import load_web_page # Example ADK tool
+libs_docs/adk/full_llm_docs.txt:16739:from google.adk.tools.mcp_tool.conversion_utils import adk_to_mcp_tool_type
+libs_docs/adk/full_llm_docs.txt:16850:from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:16851:from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, StdioServerParameters
+libs_docs/adk/full_llm_docs.txt:16933:from google.adk.agents.llm_agent import LlmAgent
+libs_docs/adk/full_llm_docs.txt:16934:from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:16935:from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:16936:from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService # Optional
+libs_docs/adk/full_llm_docs.txt:16937:from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset, SseServerParams, StdioServerParameters
+libs_docs/adk/full_llm_docs.txt:17092:    from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
+libs_docs/adk/full_llm_docs.txt:17106:    from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:17144:    from google.adk.agents import LlmAgent
+libs_docs/adk/full_llm_docs.txt:17145:    from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:17146:    from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:17150:    from google.adk.tools.openapi_tool.openapi_spec_parser.openapi_toolset import OpenAPIToolset
+libs_docs/adk/full_llm_docs.txt:17392:    from google.adk.tools.langchain_tool import LangchainTool
+libs_docs/adk/full_llm_docs.txt:17415:    from google.adk import Agent
+libs_docs/adk/full_llm_docs.txt:17447:from google.adk import Agent, Runner
+libs_docs/adk/full_llm_docs.txt:17448:from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:17449:from google.adk.tools.langchain_tool import LangchainTool
+libs_docs/adk/full_llm_docs.txt:17530:    from google.adk.tools.crewai_tool import CrewaiTool
+libs_docs/adk/full_llm_docs.txt:17555:    from google.adk import Agent
+libs_docs/adk/full_llm_docs.txt:17587:from google.adk import Agent, Runner
+libs_docs/adk/full_llm_docs.txt:17588:from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:17589:from google.adk.tools.crewai_tool import CrewaiTool
+libs_docs/adk/full_llm_docs.txt:17762:from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:17763:from google.adk.models.lite_llm import LiteLlm # For multi-model support
+libs_docs/adk/full_llm_docs.txt:17764:from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:17765:from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:18094:from google.adk.models.lite_llm import LiteLlm
+libs_docs/adk/full_llm_docs.txt:18366:# from google.adk.models.lite_llm import LiteLlm
+libs_docs/adk/full_llm_docs.txt:18619:from google.adk.sessions import InMemorySessionService
+libs_docs/adk/full_llm_docs.txt:18668:from google.adk.tools.tool_context import ToolContext
+libs_docs/adk/full_llm_docs.txt:18734:from google.adk.agents import Agent
+libs_docs/adk/full_llm_docs.txt:18735:from google.adk.models.lite_llm import LiteLlm
+libs_docs/adk/full_llm_docs.txt:18736:from google.adk.runners import Runner
+libs_docs/adk/full_llm_docs.txt:18993:from google.adk.agents.callback_context import CallbackContext
+libs_docs/adk/full_llm_docs.txt:18994:from google.adk.models.llm_request import LlmRequest
+libs_docs/adk/full_llm_docs.txt:18995:from google.adk.models.llm_response import LlmResponse
+libs_docs/adk/full_llm_docs.txt:19284:from google.adk.tools.base_tool import BaseTool
+libs_docs/adk/full_llm_docs.txt:19285:from google.adk.tools.tool_context import ToolContext
+libs_docs/adk/full_llm_docs.txt:19629:google.adk.agents module
+libs_docs/adk/full_llm_docs.txt:19630:google.adk.artifacts module
+libs_docs/adk/full_llm_docs.txt:19631:google.adk.code_executors module
+libs_docs/adk/full_llm_docs.txt:19632:google.adk.evaluation module
+libs_docs/adk/full_llm_docs.txt:19633:google.adk.events module
+libs_docs/adk/full_llm_docs.txt:19634:google.adk.examples module
+libs_docs/adk/full_llm_docs.txt:19635:google.adk.memory module
+libs_docs/adk/full_llm_docs.txt:19636:google.adk.models module
+libs_docs/adk/full_llm_docs.txt:19637:google.adk.planners module
+libs_docs/adk/full_llm_docs.txt:19638:google.adk.runners module
+libs_docs/adk/full_llm_docs.txt:19639:google.adk.sessions module
+libs_docs/adk/full_llm_docs.txt:19640:google.adk.tools package
+libs_docs/adk/full_llm_docs.txt:19647:google.adk.agents module
+libs_docs/adk/full_llm_docs.txt:19691:google.adk.artifacts module
+libs_docs/adk/full_llm_docs.txt:19711:google.adk.code_executors module
+libs_docs/adk/full_llm_docs.txt:19757:google.adk.evaluation module
+libs_docs/adk/full_llm_docs.txt:19761:google.adk.events module
+libs_docs/adk/full_llm_docs.txt:19792:google.adk.examples module
+libs_docs/adk/full_llm_docs.txt:19802:google.adk.memory module
+libs_docs/adk/full_llm_docs.txt:19813:google.adk.models module
+libs_docs/adk/full_llm_docs.txt:19831:google.adk.planners module
+libs_docs/adk/full_llm_docs.txt:19844:google.adk.runners module
+libs_docs/adk/full_llm_docs.txt:19863:google.adk.sessions module
+libs_docs/adk/full_llm_docs.txt:19914:google.adk.tools package
+libs_docs/adk/full_llm_docs.txt:20012:google.adk.agents module
+libs_docs/adk/full_llm_docs.txt:20013:google.adk.artifacts module
+libs_docs/adk/full_llm_docs.txt:20014:google.adk.code_executors module
+libs_docs/adk/full_llm_docs.txt:20015:google.adk.evaluation module
+libs_docs/adk/full_llm_docs.txt:20016:google.adk.events module
+libs_docs/adk/full_llm_docs.txt:20017:google.adk.examples module
+libs_docs/adk/full_llm_docs.txt:20018:google.adk.memory module
+libs_docs/adk/full_llm_docs.txt:20019:google.adk.models module
+libs_docs/adk/full_llm_docs.txt:20020:google.adk.planners module
+libs_docs/adk/full_llm_docs.txt:20021:google.adk.runners module
+libs_docs/adk/full_llm_docs.txt:20022:google.adk.sessions module
+libs_docs/adk/full_llm_docs.txt:20023:google.adk.tools package
+libs_docs/adk/full_llm_docs.txt:20029:google.adk.agents module¶
+libs_docs/adk/full_llm_docs.txt:20030:google.adk.agents.Agent¶
+libs_docs/adk/full_llm_docs.txt:20032:pydantic model google.adk.agents.BaseAgent¶
+libs_docs/adk/full_llm_docs.txt:20071:after_agent_callback (Callable[[google.adk.agents.callback_context.CallbackContext], Awaitable[google.genai.types.Content | None] | google.genai.types.Content | None] | None)
+libs_docs/adk/full_llm_docs.txt:20072:before_agent_callback (Callable[[google.adk.agents.callback_context.CallbackContext], Awaitable[google.genai.types.Content | None] | google.genai.types.Content | None] | None)
+libs_docs/adk/full_llm_docs.txt:20075:parent_agent (google.adk.agents.base_agent.BaseAgent | None)
+libs_docs/adk/full_llm_docs.txt:20076:sub_agents (list[google.adk.agents.base_agent.BaseAgent])
+libs_docs/adk/full_llm_docs.txt:20156:pydantic model google.adk.agents.LlmAgent¶
+libs_docs/adk/full_llm_docs.txt:23145:Check out available code executions in google.adk.code_executor package.
+libs_docs/adk/full_llm_docs.txt:23147:google.adk.tools.built_in_code_execution to tools instead.
+libs_docs/adk/full_llm_docs.txt:23212:field in google.adk.planners.built_in_planner.
+libs_docs/adk/full_llm_docs.txt:23241:pydantic model google.adk.agents.LoopAgent¶
+libs_docs/adk/full_llm_docs.txt:23300:pydantic model google.adk.agents.ParallelAgent¶
+libs_docs/adk/full_llm_docs.txt:23344:pydantic model google.adk.agents.SequentialAgent¶
+libs_docs/adk/full_llm_docs.txt:23384:google.adk.artifacts module¶
+libs_docs/adk/full_llm_docs.txt:23385:class google.adk.artifacts.BaseArtifactService¶
+libs_docs/adk/full_llm_docs.txt:23449:class google.adk.artifacts.GcsArtifactService(bucket_name, **kwargs)¶
+libs_docs/adk/full_llm_docs.txt:23517:pydantic model google.adk.artifacts.InMemoryArtifactService¶
+libs_docs/adk/full_llm_docs.txt:24008:google.adk.code_executors module¶
+libs_docs/adk/full_llm_docs.txt:24009:pydantic model google.adk.code_executors.BaseCodeExecutor¶
+libs_docs/adk/full_llm_docs.txt:24141:class google.adk.code_executors.CodeExecutorContext(session_state)¶
+libs_docs/adk/full_llm_docs.txt:24208:pydantic model google.adk.code_executors.ContainerCodeExecutor¶
+libs_docs/adk/full_llm_docs.txt:24363:pydantic model google.adk.code_executors.UnsafeLocalCodeExecutor¶
+libs_docs/adk/full_llm_docs.txt:24453:pydantic model google.adk.code_executors.VertexAiCodeExecutor¶
+libs_docs/adk/full_llm_docs.txt:24564:google.adk.evaluation module¶
+libs_docs/adk/full_llm_docs.txt:24565:class google.adk.evaluation.AgentEvaluator¶
+libs_docs/adk/full_llm_docs.txt:24584:google.adk.events module¶
+libs_docs/adk/full_llm_docs.txt:24585:pydantic model google.adk.events.Event¶
+libs_docs/adk/full_llm_docs.txt:26616:actions (google.adk.events.event_actions.EventActions)
+libs_docs/adk/full_llm_docs.txt:26663:pydantic model google.adk.events.EventActions¶
+libs_docs/adk/full_llm_docs.txt:27675:requested_auth_configs (dict[str, google.adk.auth.auth_tool.AuthConfig])
+libs_docs/adk/full_llm_docs.txt:27700:google.adk.examples module¶
+libs_docs/adk/full_llm_docs.txt:27701:class google.adk.examples.BaseExampleProvider¶
+libs_docs/adk/full_llm_docs.txt:27713:pydantic model google.adk.examples.Example¶
+libs_docs/adk/full_llm_docs.txt:28195:class google.adk.examples.VertexAiExampleStore(examples_store_name)¶
+libs_docs/adk/full_llm_docs.txt:28211:google.adk.memory module¶
+libs_docs/adk/full_llm_docs.txt:28212:class google.adk.memory.BaseMemoryService¶
+libs_docs/adk/full_llm_docs.txt:28232:class google.adk.memory.InMemoryMemoryService¶
+libs_docs/adk/full_llm_docs.txt:28247:class google.adk.memory.VertexAiRagMemoryService(rag_corpus=None, similarity_top_k=None, vector_distance_threshold=10)¶
+libs_docs/adk/full_llm_docs.txt:28267:google.adk.models module¶
+libs_docs/adk/full_llm_docs.txt:28269:pydantic model google.adk.models.BaseLlm¶
+libs_docs/adk/full_llm_docs.txt:28318:pydantic model google.adk.models.Gemini¶
+libs_docs/adk/full_llm_docs.txt:28367:class google.adk.models.LLMRegistry¶
+libs_docs/adk/full_llm_docs.txt:28392:google.adk.planners module¶
+libs_docs/adk/full_llm_docs.txt:28393:class google.adk.planners.BasePlanner¶
+libs_docs/adk/full_llm_docs.txt:28416:class google.adk.planners.BuiltInPlanner(*, thinking_config)¶
+libs_docs/adk/full_llm_docs.txt:28455:class google.adk.planners.PlanReActPlanner¶
+libs_docs/adk/full_llm_docs.txt:28478:google.adk.runners module¶
+libs_docs/adk/full_llm_docs.txt:28479:class google.adk.runners.InMemoryRunner(agent, *, app_name='InMemoryRunner')¶
+libs_docs/adk/full_llm_docs.txt:28495:class google.adk.runners.Runner(*, app_name, agent, artifact_service=None, session_service, memory_service=None)¶
+libs_docs/adk/full_llm_docs.txt:28569:google.adk.sessions module¶
+libs_docs/adk/full_llm_docs.txt:28570:class google.adk.sessions.BaseSessionService¶
+libs_docs/adk/full_llm_docs.txt:28610:class google.adk.sessions.DatabaseSessionService(db_url)¶
+libs_docs/adk/full_llm_docs.txt:28649:class google.adk.sessions.InMemorySessionService¶
+libs_docs/adk/full_llm_docs.txt:28686:pydantic model google.adk.sessions.Session¶
+libs_docs/adk/full_llm_docs.txt:30759:events (list[google.adk.events.event.Event])
+libs_docs/adk/full_llm_docs.txt:30777:class google.adk.sessions.State(value, delta)¶
+libs_docs/adk/full_llm_docs.txt:30800:class google.adk.sessions.VertexAiSessionService(project=None, location=None)¶
+libs_docs/adk/full_llm_docs.txt:30837:google.adk.tools package¶
+libs_docs/adk/full_llm_docs.txt:30838:class google.adk.tools.APIHubToolset(*, apihub_resource_name, access_token=None, service_account_json=None, name='', description='', lazy_load_spec=False, auth_scheme=None, auth_credential=None, apihub_client=None)¶
+libs_docs/adk/full_llm_docs.txt:30925:pydantic model google.adk.tools.AuthToolArguments¶
+libs_docs/adk/full_llm_docs.txt:31891:auth_config (google.adk.auth.auth_tool.AuthConfig)
+libs_docs/adk/full_llm_docs.txt:31895:class google.adk.tools.BaseTool(*, name, description, is_long_running=False)¶
+libs_docs/adk/full_llm_docs.txt:31927:class google.adk.tools.ExampleTool(examples)¶
+libs_docs/adk/full_llm_docs.txt:31942:class google.adk.tools.FunctionTool(func)¶
+libs_docs/adk/full_llm_docs.txt:31959:class google.adk.tools.LongRunningFunctionTool(func)¶
+libs_docs/adk/full_llm_docs.txt:31972:class google.adk.tools.ToolContext(invocation_context, *, function_call_id=None, event_actions=None)¶
+libs_docs/adk/full_llm_docs.txt:32003:class google.adk.tools.VertexAiSearchTool(*, data_store_id=None, search_engine_id=None)¶
+libs_docs/adk/full_llm_docs.txt:32030:google.adk.tools.exit_loop(tool_context)¶
+libs_docs/adk/full_llm_docs.txt:32033:google.adk.tools.transfer_to_agent(agent_name, tool_context)¶
+libs_docs/adk/full_llm_docs.txt:32035:class google.adk.tools.application_integration_tool.ApplicationIntegrationToolset(project, location, integration=None, triggers=None, connection=None, entity_operations=None, actions=None, tool_name='', tool_instructions='', service_account_json=None)¶
+libs_docs/adk/full_llm_docs.txt:32133:class google.adk.tools.application_integration_tool.IntegrationConnectorTool(name, description, connection_name, connection_host, connection_service_name, entity, operation, action, rest_api_tool)¶
+libs_docs/adk/full_llm_docs.txt:32181:class google.adk.tools.mcp_tool.MCPTool(mcp_tool, mcp_session, mcp_session_manager, auth_scheme=None, auth_credential=None)¶
+libs_docs/adk/full_llm_docs.txt:32207:class google.adk.tools.mcp_tool.MCPToolset(*, connection_params, errlog=<_io.TextIOWrapper name='<stderr>' mode='w' encoding='utf-8'>, exit_stack=<contextlib.AsyncExitStack object>)¶
+libs_docs/adk/full_llm_docs.txt:32329:google.adk.tools.mcp_tool.adk_to_mcp_tool_type(tool)¶
+libs_docs/adk/full_llm_docs.txt:32344:google.adk.tools.mcp_tool.gemini_to_json_schema(gemini_schema)¶
+libs_docs/adk/full_llm_docs.txt:32355:class google.adk.tools.openapi_tool.OpenAPIToolset(*, spec_dict=None, spec_str=None, spec_str_type='json', auth_scheme=None, auth_credential=None)¶
+libs_docs/adk/full_llm_docs.txt:32399:helpers in google.adk.tools.openapi_tool.auth.auth_helpers
+libs_docs/adk/full_llm_docs.txt:32402:google.adk.tools.openapi_tool.auth.auth_helpers
+libs_docs/adk/full_llm_docs.txt:32411:class google.adk.tools.openapi_tool.RestApiTool(name, description, endpoint, operation, auth_scheme=None, auth_credential=None, should_parse_operation=True)¶
+libs_docs/adk/full_llm_docs.txt:32432:Hint: Use google.adk.tools.openapi_tool.auth.auth_helpers to construct
+libs_docs/adk/full_llm_docs.txt:32494:class google.adk.tools.retrieval.BaseRetrievalTool(*, name, description, is_long_running=False)¶
+libs_docs/adk/full_llm_docs.txt:32496:class google.adk.tools.retrieval.FilesRetrieval(*, name, description, input_dir)¶
+libs_docs/adk/full_llm_docs.txt:32498:class google.adk.tools.retrieval.LlamaIndexRetrieval(*, name, description, retriever)¶
+libs_docs/adk/full_llm_docs.txt:32512:class google.adk.tools.retrieval.VertexAiRagRetrieval(*, name, description, rag_corpora=None, rag_resources=None, similarity_top_k=None, vector_distance_threshold=None)¶
+libs_docs/adk/full_llm_docs.txt:32566:google.adk.agents module
+libs_docs/adk/full_llm_docs.txt:32567:google.adk.artifacts module
+libs_docs/adk/full_llm_docs.txt:32568:google.adk.code_executors module
+libs_docs/adk/full_llm_docs.txt:32569:google.adk.evaluation module
+libs_docs/adk/full_llm_docs.txt:32570:google.adk.events module
+libs_docs/adk/full_llm_docs.txt:32571:google.adk.examples module
+libs_docs/adk/full_llm_docs.txt:32572:google.adk.memory module
+libs_docs/adk/full_llm_docs.txt:32573:google.adk.models module
+libs_docs/adk/full_llm_docs.txt:32574:google.adk.planners module
+libs_docs/adk/full_llm_docs.txt:32575:google.adk.runners module
+libs_docs/adk/full_llm_docs.txt:32576:google.adk.sessions module
+libs_docs/adk/full_llm_docs.txt:32577:google.adk.tools package
+libs_docs/adk/full_llm_docs.txt:32584:actions (google.adk.events.Event attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32585:(google.adk.tools.ToolContext property)
+libs_docs/adk/full_llm_docs.txt:32586:add_input_files() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32587:add_processed_file_names() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32588:add_session_to_memory() (google.adk.memory.BaseMemoryService method)
+libs_docs/adk/full_llm_docs.txt:32589:(google.adk.memory.InMemoryMemoryService method)
+libs_docs/adk/full_llm_docs.txt:32590:(google.adk.memory.VertexAiRagMemoryService method)
+libs_docs/adk/full_llm_docs.txt:32591:adk_to_mcp_tool_type() (in module google.adk.tools.mcp_tool)
+libs_docs/adk/full_llm_docs.txt:32592:after_agent_callback (google.adk.agents.BaseAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32593:after_model_callback (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32594:after_tool_callback (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32595:agent (google.adk.runners.InMemoryRunner attribute)
+libs_docs/adk/full_llm_docs.txt:32596:(google.adk.runners.Runner attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32597:Agent (in module google.adk.agents)
+libs_docs/adk/full_llm_docs.txt:32598:AgentEvaluator (class in google.adk.evaluation)
+libs_docs/adk/full_llm_docs.txt:32599:api_client (google.adk.models.Gemini property)
+libs_docs/adk/full_llm_docs.txt:32600:APIHubToolset (class in google.adk.tools)
+libs_docs/adk/full_llm_docs.txt:32601:app_name (google.adk.runners.InMemoryRunner attribute)
+libs_docs/adk/full_llm_docs.txt:32602:(google.adk.runners.Runner attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32603:(google.adk.sessions.Session attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32604:APP_PREFIX (google.adk.sessions.State attribute)
+libs_docs/adk/full_llm_docs.txt:32605:append_event() (google.adk.sessions.BaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32606:(google.adk.sessions.DatabaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32607:(google.adk.sessions.InMemorySessionService method)
+libs_docs/adk/full_llm_docs.txt:32608:(google.adk.sessions.VertexAiSessionService method)
+libs_docs/adk/full_llm_docs.txt:32609:ApplicationIntegrationToolset (class in google.adk.tools.application_integration_tool)
+libs_docs/adk/full_llm_docs.txt:32610:apply_thinking_config() (google.adk.planners.BuiltInPlanner method)
+libs_docs/adk/full_llm_docs.txt:32611:artifact_delta (google.adk.events.EventActions attribute)
+libs_docs/adk/full_llm_docs.txt:32612:artifact_service (google.adk.runners.Runner attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32613:artifacts (google.adk.artifacts.InMemoryArtifactService attribute)
+libs_docs/adk/full_llm_docs.txt:32614:auth_config (google.adk.tools.AuthToolArguments attribute)
+libs_docs/adk/full_llm_docs.txt:32615:author (google.adk.events.Event attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32617:base_url (google.adk.code_executors.ContainerCodeExecutor attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32618:BaseArtifactService (class in google.adk.artifacts)
+libs_docs/adk/full_llm_docs.txt:32619:BaseExampleProvider (class in google.adk.examples)
+libs_docs/adk/full_llm_docs.txt:32620:BaseMemoryService (class in google.adk.memory)
+libs_docs/adk/full_llm_docs.txt:32621:BasePlanner (class in google.adk.planners)
+libs_docs/adk/full_llm_docs.txt:32622:BaseRetrievalTool (class in google.adk.tools.retrieval)
+libs_docs/adk/full_llm_docs.txt:32623:BaseSessionService (class in google.adk.sessions)
+libs_docs/adk/full_llm_docs.txt:32624:BaseTool (class in google.adk.tools)
+libs_docs/adk/full_llm_docs.txt:32625:before_agent_callback (google.adk.agents.BaseAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32626:before_model_callback (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32627:before_tool_callback (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32628:branch (google.adk.events.Event attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32629:build_planning_instruction() (google.adk.planners.BasePlanner method)
+libs_docs/adk/full_llm_docs.txt:32630:(google.adk.planners.BuiltInPlanner method)
+libs_docs/adk/full_llm_docs.txt:32631:(google.adk.planners.PlanReActPlanner method)
+libs_docs/adk/full_llm_docs.txt:32632:BuiltInPlanner (class in google.adk.planners)
+libs_docs/adk/full_llm_docs.txt:32634:call() (google.adk.tools.openapi_tool.RestApiTool method)
+libs_docs/adk/full_llm_docs.txt:32635:canonical_after_model_callbacks (google.adk.agents.LlmAgent property)
+libs_docs/adk/full_llm_docs.txt:32636:canonical_before_model_callbacks (google.adk.agents.LlmAgent property)
+libs_docs/adk/full_llm_docs.txt:32637:canonical_global_instruction() (google.adk.agents.LlmAgent method)
+libs_docs/adk/full_llm_docs.txt:32638:canonical_instruction() (google.adk.agents.LlmAgent method)
+libs_docs/adk/full_llm_docs.txt:32639:canonical_model (google.adk.agents.LlmAgent property)
+libs_docs/adk/full_llm_docs.txt:32640:canonical_tools (google.adk.agents.LlmAgent property)
+libs_docs/adk/full_llm_docs.txt:32641:clear_input_files() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32642:close_session() (google.adk.runners.Runner method)
+libs_docs/adk/full_llm_docs.txt:32643:(google.adk.sessions.BaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32644:code_block_delimiters (google.adk.code_executors.BaseCodeExecutor attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32645:code_executor (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32646:CodeExecutorContext (class in google.adk.code_executors)
+libs_docs/adk/full_llm_docs.txt:32647:configure_auth_credential() (google.adk.tools.openapi_tool.RestApiTool method)
+libs_docs/adk/full_llm_docs.txt:32648:configure_auth_scheme() (google.adk.tools.openapi_tool.RestApiTool method)
+libs_docs/adk/full_llm_docs.txt:32649:connect() (google.adk.models.BaseLlm method)
+libs_docs/adk/full_llm_docs.txt:32650:(google.adk.models.Gemini method)
+libs_docs/adk/full_llm_docs.txt:32651:connection_params (google.adk.tools.mcp_tool.MCPToolset attribute)
+libs_docs/adk/full_llm_docs.txt:32652:create_session() (google.adk.sessions.BaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32653:(google.adk.sessions.DatabaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32654:(google.adk.sessions.InMemorySessionService method)
+libs_docs/adk/full_llm_docs.txt:32655:(google.adk.sessions.VertexAiSessionService method)
+libs_docs/adk/full_llm_docs.txt:32657:data_store_id (google.adk.tools.VertexAiSearchTool attribute)
+libs_docs/adk/full_llm_docs.txt:32658:DatabaseSessionService (class in google.adk.sessions)
+libs_docs/adk/full_llm_docs.txt:32659:delete_artifact() (google.adk.artifacts.BaseArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32660:(google.adk.artifacts.GcsArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32661:(google.adk.artifacts.InMemoryArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32662:delete_session() (google.adk.sessions.BaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32663:(google.adk.sessions.DatabaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32664:(google.adk.sessions.InMemorySessionService method)
+libs_docs/adk/full_llm_docs.txt:32665:(google.adk.sessions.VertexAiSessionService method)
+libs_docs/adk/full_llm_docs.txt:32666:description (google.adk.agents.BaseAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32667:(google.adk.tools.BaseTool attribute)
+libs_docs/adk/full_llm_docs.txt:32668:disallow_transfer_to_parent (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32669:disallow_transfer_to_peers (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32670:docker_path (google.adk.code_executors.ContainerCodeExecutor attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32672:error_retry_attempts (google.adk.code_executors.BaseCodeExecutor attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32673:escalate (google.adk.events.EventActions attribute)
+libs_docs/adk/full_llm_docs.txt:32674:evaluate() (google.adk.evaluation.AgentEvaluator static method)
+libs_docs/adk/full_llm_docs.txt:32675:event_actions (google.adk.tools.ToolContext attribute)
+libs_docs/adk/full_llm_docs.txt:32676:events (google.adk.sessions.Session attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32677:examples (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32678:(google.adk.tools.ExampleTool attribute)
+libs_docs/adk/full_llm_docs.txt:32679:ExampleTool (class in google.adk.tools)
+libs_docs/adk/full_llm_docs.txt:32680:EXCLUDE_FIELDS (google.adk.tools.application_integration_tool.IntegrationConnectorTool attribute)
+libs_docs/adk/full_llm_docs.txt:32681:execute_code() (google.adk.code_executors.BaseCodeExecutor method)
+libs_docs/adk/full_llm_docs.txt:32682:(google.adk.code_executors.ContainerCodeExecutor method)
+libs_docs/adk/full_llm_docs.txt:32683:(google.adk.code_executors.UnsafeLocalCodeExecutor method)
+libs_docs/adk/full_llm_docs.txt:32684:(google.adk.code_executors.VertexAiCodeExecutor method)
+libs_docs/adk/full_llm_docs.txt:32685:execution_result_delimiters (google.adk.code_executors.BaseCodeExecutor attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32686:exit_loop() (in module google.adk.tools)
+libs_docs/adk/full_llm_docs.txt:32687:exit_stack (google.adk.tools.mcp_tool.MCPToolset attribute)
+libs_docs/adk/full_llm_docs.txt:32689:FilesRetrieval (class in google.adk.tools.retrieval)
+libs_docs/adk/full_llm_docs.txt:32690:find_agent() (google.adk.agents.BaseAgent method)
+libs_docs/adk/full_llm_docs.txt:32691:find_config_for_test_file() (google.adk.evaluation.AgentEvaluator static method)
+libs_docs/adk/full_llm_docs.txt:32692:find_sub_agent() (google.adk.agents.BaseAgent method)
+libs_docs/adk/full_llm_docs.txt:32693:from_parsed_operation() (google.adk.tools.openapi_tool.RestApiTool class method)
+libs_docs/adk/full_llm_docs.txt:32694:from_parsed_operation_str() (google.adk.tools.openapi_tool.RestApiTool class method)
+libs_docs/adk/full_llm_docs.txt:32695:from_server() (google.adk.tools.mcp_tool.MCPToolset class method)
+libs_docs/adk/full_llm_docs.txt:32696:func (google.adk.tools.FunctionTool attribute)
+libs_docs/adk/full_llm_docs.txt:32697:function_call_id (google.adk.tools.AuthToolArguments attribute)
+libs_docs/adk/full_llm_docs.txt:32698:(google.adk.tools.ToolContext attribute)
+libs_docs/adk/full_llm_docs.txt:32699:FunctionTool (class in google.adk.tools)
+libs_docs/adk/full_llm_docs.txt:32701:GcsArtifactService (class in google.adk.artifacts)
+libs_docs/adk/full_llm_docs.txt:32702:gemini_to_json_schema() (in module google.adk.tools.mcp_tool)
+libs_docs/adk/full_llm_docs.txt:32703:generate_content_async() (google.adk.models.BaseLlm method)
+libs_docs/adk/full_llm_docs.txt:32704:(google.adk.models.Gemini method)
+libs_docs/adk/full_llm_docs.txt:32705:generate_content_config (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32706:get() (google.adk.sessions.State method)
+libs_docs/adk/full_llm_docs.txt:32707:get_auth_response() (google.adk.tools.ToolContext method)
+libs_docs/adk/full_llm_docs.txt:32708:get_error_count() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32709:get_examples() (google.adk.examples.BaseExampleProvider method)
+libs_docs/adk/full_llm_docs.txt:32710:(google.adk.examples.VertexAiExampleStore method)
+libs_docs/adk/full_llm_docs.txt:32711:get_execution_id() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32712:get_function_calls (google.adk.events.Event attribute)
+libs_docs/adk/full_llm_docs.txt:32713:get_function_calls() (google.adk.events.Event method)
+libs_docs/adk/full_llm_docs.txt:32714:get_function_responses() (google.adk.events.Event method)
+libs_docs/adk/full_llm_docs.txt:32715:get_input_files() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32716:get_processed_file_names() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32717:get_session() (google.adk.sessions.BaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32718:(google.adk.sessions.DatabaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32719:(google.adk.sessions.InMemorySessionService method)
+libs_docs/adk/full_llm_docs.txt:32720:(google.adk.sessions.VertexAiSessionService method)
+libs_docs/adk/full_llm_docs.txt:32721:get_state_delta() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32722:get_tool() (google.adk.tools.APIHubToolset method)
+libs_docs/adk/full_llm_docs.txt:32723:(google.adk.tools.openapi_tool.OpenAPIToolset method)
+libs_docs/adk/full_llm_docs.txt:32724:get_tools() (google.adk.tools.APIHubToolset method)
+libs_docs/adk/full_llm_docs.txt:32725:(google.adk.tools.application_integration_tool.ApplicationIntegrationToolset method)
+libs_docs/adk/full_llm_docs.txt:32726:(google.adk.tools.openapi_tool.OpenAPIToolset method)
+libs_docs/adk/full_llm_docs.txt:32727:global_instruction (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32728:google.adk.agents
+libs_docs/adk/full_llm_docs.txt:32730:google.adk.artifacts
+libs_docs/adk/full_llm_docs.txt:32732:google.adk.code_executors
+libs_docs/adk/full_llm_docs.txt:32734:google.adk.evaluation
+libs_docs/adk/full_llm_docs.txt:32736:google.adk.events
+libs_docs/adk/full_llm_docs.txt:32738:google.adk.examples
+libs_docs/adk/full_llm_docs.txt:32740:google.adk.memory
+libs_docs/adk/full_llm_docs.txt:32742:google.adk.models
+libs_docs/adk/full_llm_docs.txt:32744:google.adk.planners
+libs_docs/adk/full_llm_docs.txt:32746:google.adk.runners
+libs_docs/adk/full_llm_docs.txt:32748:google.adk.sessions
+libs_docs/adk/full_llm_docs.txt:32750:google.adk.tools
+libs_docs/adk/full_llm_docs.txt:32752:google.adk.tools.application_integration_tool
+libs_docs/adk/full_llm_docs.txt:32754:google.adk.tools.google_api_tool
+libs_docs/adk/full_llm_docs.txt:32756:google.adk.tools.mcp_tool
+libs_docs/adk/full_llm_docs.txt:32758:google.adk.tools.openapi_tool
+libs_docs/adk/full_llm_docs.txt:32760:google.adk.tools.retrieval
+libs_docs/adk/full_llm_docs.txt:32763:has_delta() (google.adk.sessions.State method)
+libs_docs/adk/full_llm_docs.txt:32764:has_trailing_code_execution_result() (google.adk.events.Event method)
+libs_docs/adk/full_llm_docs.txt:32766:id (google.adk.events.Event attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32767:(google.adk.sessions.Session attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32768:image (google.adk.code_executors.ContainerCodeExecutor attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32769:include_contents (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32770:increment_error_count() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32771:InMemoryMemoryService (class in google.adk.memory)
+libs_docs/adk/full_llm_docs.txt:32772:InMemoryRunner (class in google.adk.runners)
+libs_docs/adk/full_llm_docs.txt:32773:InMemorySessionService (class in google.adk.sessions)
+libs_docs/adk/full_llm_docs.txt:32774:input (google.adk.examples.Example attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32775:input_schema (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32776:instruction (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32777:IntegrationConnectorTool (class in google.adk.tools.application_integration_tool)
+libs_docs/adk/full_llm_docs.txt:32778:invocation_context (google.adk.tools.ToolContext attribute)
+libs_docs/adk/full_llm_docs.txt:32779:invocation_id (google.adk.events.Event attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32780:is_final_response (google.adk.events.Event attribute)
+libs_docs/adk/full_llm_docs.txt:32781:is_final_response() (google.adk.events.Event method)
+libs_docs/adk/full_llm_docs.txt:32782:is_long_running (google.adk.tools.BaseTool attribute)
+libs_docs/adk/full_llm_docs.txt:32783:(google.adk.tools.LongRunningFunctionTool attribute)
+libs_docs/adk/full_llm_docs.txt:32785:last_update_time (google.adk.sessions.Session attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32786:list_artifact_keys() (google.adk.artifacts.BaseArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32787:(google.adk.artifacts.GcsArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32788:(google.adk.artifacts.InMemoryArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32789:list_artifacts() (google.adk.tools.ToolContext method)
+libs_docs/adk/full_llm_docs.txt:32790:list_events() (google.adk.sessions.BaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32791:(google.adk.sessions.DatabaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32792:(google.adk.sessions.InMemorySessionService method)
+libs_docs/adk/full_llm_docs.txt:32793:(google.adk.sessions.VertexAiSessionService method)
+libs_docs/adk/full_llm_docs.txt:32794:list_sessions() (google.adk.sessions.BaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32795:(google.adk.sessions.DatabaseSessionService method)
+libs_docs/adk/full_llm_docs.txt:32796:(google.adk.sessions.InMemorySessionService method)
+libs_docs/adk/full_llm_docs.txt:32797:(google.adk.sessions.VertexAiSessionService method)
+libs_docs/adk/full_llm_docs.txt:32798:list_versions() (google.adk.artifacts.BaseArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32799:(google.adk.artifacts.GcsArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32800:(google.adk.artifacts.InMemoryArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32801:LlamaIndexRetrieval (class in google.adk.tools.retrieval)
+libs_docs/adk/full_llm_docs.txt:32802:LLMRegistry (class in google.adk.models)
+libs_docs/adk/full_llm_docs.txt:32803:load_artifact() (google.adk.artifacts.BaseArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32804:(google.adk.artifacts.GcsArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32805:(google.adk.artifacts.InMemoryArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32806:load_tools() (google.adk.tools.mcp_tool.MCPToolset method)
+libs_docs/adk/full_llm_docs.txt:32807:long_running_tool_ids (google.adk.events.Event attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32808:LongRunningFunctionTool (class in google.adk.tools)
+libs_docs/adk/full_llm_docs.txt:32810:max_iterations (google.adk.agents.LoopAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32811:MCPTool (class in google.adk.tools.mcp_tool)
+libs_docs/adk/full_llm_docs.txt:32812:MCPToolset (class in google.adk.tools.mcp_tool)
+libs_docs/adk/full_llm_docs.txt:32813:memory_service (google.adk.runners.Runner attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32814:model (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32815:(google.adk.models.BaseLlm attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32816:(google.adk.models.Gemini attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32817:model_post_init() (google.adk.agents.BaseAgent method)
+libs_docs/adk/full_llm_docs.txt:32818:(google.adk.code_executors.ContainerCodeExecutor method)
+libs_docs/adk/full_llm_docs.txt:32819:(google.adk.code_executors.VertexAiCodeExecutor method)
+libs_docs/adk/full_llm_docs.txt:32820:(google.adk.events.Event method)
+libs_docs/adk/full_llm_docs.txt:32822:google.adk.agents
+libs_docs/adk/full_llm_docs.txt:32823:google.adk.artifacts
+libs_docs/adk/full_llm_docs.txt:32824:google.adk.code_executors
+libs_docs/adk/full_llm_docs.txt:32825:google.adk.evaluation
+libs_docs/adk/full_llm_docs.txt:32826:google.adk.events
+libs_docs/adk/full_llm_docs.txt:32827:google.adk.examples
+libs_docs/adk/full_llm_docs.txt:32828:google.adk.memory
+libs_docs/adk/full_llm_docs.txt:32829:google.adk.models
+libs_docs/adk/full_llm_docs.txt:32830:google.adk.planners
+libs_docs/adk/full_llm_docs.txt:32831:google.adk.runners
+libs_docs/adk/full_llm_docs.txt:32832:google.adk.sessions
+libs_docs/adk/full_llm_docs.txt:32833:google.adk.tools
+libs_docs/adk/full_llm_docs.txt:32834:google.adk.tools.application_integration_tool
+libs_docs/adk/full_llm_docs.txt:32835:google.adk.tools.google_api_tool
+libs_docs/adk/full_llm_docs.txt:32836:google.adk.tools.mcp_tool
+libs_docs/adk/full_llm_docs.txt:32837:google.adk.tools.openapi_tool
+libs_docs/adk/full_llm_docs.txt:32838:google.adk.tools.retrieval
+libs_docs/adk/full_llm_docs.txt:32840:name (google.adk.agents.BaseAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32841:(google.adk.tools.BaseTool attribute)
+libs_docs/adk/full_llm_docs.txt:32842:new_id() (google.adk.events.Event static method)
+libs_docs/adk/full_llm_docs.txt:32843:new_llm() (google.adk.models.LLMRegistry static method)
+libs_docs/adk/full_llm_docs.txt:32845:OpenAPIToolset (class in google.adk.tools.openapi_tool)
+libs_docs/adk/full_llm_docs.txt:32846:optimize_data_file (google.adk.code_executors.BaseCodeExecutor attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32847:(google.adk.code_executors.ContainerCodeExecutor attribute)
+libs_docs/adk/full_llm_docs.txt:32848:(google.adk.code_executors.UnsafeLocalCodeExecutor attribute)
+libs_docs/adk/full_llm_docs.txt:32849:OPTIONAL_FIELDS (google.adk.tools.application_integration_tool.IntegrationConnectorTool attribute)
+libs_docs/adk/full_llm_docs.txt:32850:output (google.adk.examples.Example attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32851:output_key (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32852:output_schema (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32854:parent_agent (google.adk.agents.BaseAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32855:planner (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32856:PlanReActPlanner (class in google.adk.planners)
+libs_docs/adk/full_llm_docs.txt:32857:process_llm_request() (google.adk.tools.BaseTool method)
+libs_docs/adk/full_llm_docs.txt:32858:(google.adk.tools.ExampleTool method)
+libs_docs/adk/full_llm_docs.txt:32859:(google.adk.tools.retrieval.VertexAiRagRetrieval method)
+libs_docs/adk/full_llm_docs.txt:32860:(google.adk.tools.VertexAiSearchTool method)
+libs_docs/adk/full_llm_docs.txt:32861:process_planning_response() (google.adk.planners.BasePlanner method)
+libs_docs/adk/full_llm_docs.txt:32862:(google.adk.planners.BuiltInPlanner method)
+libs_docs/adk/full_llm_docs.txt:32863:(google.adk.planners.PlanReActPlanner method)
+libs_docs/adk/full_llm_docs.txt:32865:register() (google.adk.models.LLMRegistry static method)
+libs_docs/adk/full_llm_docs.txt:32866:request_credential() (google.adk.tools.ToolContext method)
+libs_docs/adk/full_llm_docs.txt:32867:requested_auth_configs (google.adk.events.EventActions attribute)
+libs_docs/adk/full_llm_docs.txt:32868:reset_error_count() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32869:resolve() (google.adk.models.LLMRegistry static method)
+libs_docs/adk/full_llm_docs.txt:32870:resource_name (google.adk.code_executors.VertexAiCodeExecutor attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32871:RestApiTool (class in google.adk.tools.openapi_tool)
+libs_docs/adk/full_llm_docs.txt:32872:root_agent (google.adk.agents.BaseAgent property)
+libs_docs/adk/full_llm_docs.txt:32873:run() (google.adk.runners.Runner method)
+libs_docs/adk/full_llm_docs.txt:32874:run_async() (google.adk.agents.BaseAgent method)
+libs_docs/adk/full_llm_docs.txt:32875:(google.adk.runners.Runner method)
+libs_docs/adk/full_llm_docs.txt:32876:(google.adk.tools.application_integration_tool.IntegrationConnectorTool method)
+libs_docs/adk/full_llm_docs.txt:32877:(google.adk.tools.BaseTool method)
+libs_docs/adk/full_llm_docs.txt:32878:(google.adk.tools.FunctionTool method)
+libs_docs/adk/full_llm_docs.txt:32879:(google.adk.tools.mcp_tool.MCPTool method)
+libs_docs/adk/full_llm_docs.txt:32880:(google.adk.tools.openapi_tool.RestApiTool method)
+libs_docs/adk/full_llm_docs.txt:32881:(google.adk.tools.retrieval.LlamaIndexRetrieval method)
+libs_docs/adk/full_llm_docs.txt:32882:(google.adk.tools.retrieval.VertexAiRagRetrieval method)
+libs_docs/adk/full_llm_docs.txt:32883:run_live() (google.adk.agents.BaseAgent method)
+libs_docs/adk/full_llm_docs.txt:32884:(google.adk.runners.Runner method)
+libs_docs/adk/full_llm_docs.txt:32885:Runner (class in google.adk.runners)
+libs_docs/adk/full_llm_docs.txt:32887:save_artifact() (google.adk.artifacts.BaseArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32888:(google.adk.artifacts.GcsArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32889:(google.adk.artifacts.InMemoryArtifactService method)
+libs_docs/adk/full_llm_docs.txt:32890:search_engine_id (google.adk.tools.VertexAiSearchTool attribute)
+libs_docs/adk/full_llm_docs.txt:32891:search_memory() (google.adk.memory.BaseMemoryService method)
+libs_docs/adk/full_llm_docs.txt:32892:(google.adk.memory.InMemoryMemoryService method)
+libs_docs/adk/full_llm_docs.txt:32893:(google.adk.memory.VertexAiRagMemoryService method)
+libs_docs/adk/full_llm_docs.txt:32894:(google.adk.tools.ToolContext method)
+libs_docs/adk/full_llm_docs.txt:32895:session (google.adk.tools.mcp_tool.MCPToolset attribute)
+libs_docs/adk/full_llm_docs.txt:32896:session_events (google.adk.memory.InMemoryMemoryService attribute)
+libs_docs/adk/full_llm_docs.txt:32897:session_service (google.adk.runners.Runner attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32898:set_execution_id() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32899:skip_summarization (google.adk.events.EventActions attribute)
+libs_docs/adk/full_llm_docs.txt:32900:State (class in google.adk.sessions)
+libs_docs/adk/full_llm_docs.txt:32901:state (google.adk.sessions.Session attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32902:state_delta (google.adk.events.EventActions attribute)
+libs_docs/adk/full_llm_docs.txt:32903:stateful (google.adk.code_executors.BaseCodeExecutor attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32904:(google.adk.code_executors.ContainerCodeExecutor attribute)
+libs_docs/adk/full_llm_docs.txt:32905:(google.adk.code_executors.UnsafeLocalCodeExecutor attribute)
+libs_docs/adk/full_llm_docs.txt:32906:sub_agents (google.adk.agents.BaseAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32907:supported_models() (google.adk.models.BaseLlm class method)
+libs_docs/adk/full_llm_docs.txt:32908:(google.adk.models.Gemini static method)
+libs_docs/adk/full_llm_docs.txt:32910:TEMP_PREFIX (google.adk.sessions.State attribute)
+libs_docs/adk/full_llm_docs.txt:32911:thinking_config (google.adk.planners.BuiltInPlanner attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32912:timestamp (google.adk.events.Event attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32913:to_dict() (google.adk.sessions.State method)
+libs_docs/adk/full_llm_docs.txt:32914:ToolContext (class in google.adk.tools)
+libs_docs/adk/full_llm_docs.txt:32915:tools (google.adk.agents.LlmAgent attribute)
+libs_docs/adk/full_llm_docs.txt:32916:transfer_to_agent (google.adk.events.EventActions attribute)
+libs_docs/adk/full_llm_docs.txt:32917:transfer_to_agent() (in module google.adk.tools)
+libs_docs/adk/full_llm_docs.txt:32919:update() (google.adk.sessions.State method)
+libs_docs/adk/full_llm_docs.txt:32920:update_code_execution_result() (google.adk.code_executors.CodeExecutorContext method)
+libs_docs/adk/full_llm_docs.txt:32921:user_id (google.adk.sessions.Session attribute), [1]
+libs_docs/adk/full_llm_docs.txt:32922:USER_PREFIX (google.adk.sessions.State attribute)
+libs_docs/adk/full_llm_docs.txt:32924:VertexAiExampleStore (class in google.adk.examples)
+libs_docs/adk/full_llm_docs.txt:32925:VertexAiRagMemoryService (class in google.adk.memory)
+libs_docs/adk/full_llm_docs.txt:32926:VertexAiRagRetrieval (class in google.adk.tools.retrieval)
+libs_docs/adk/full_llm_docs.txt:32927:VertexAiSearchTool (class in google.adk.tools)
+libs_docs/adk/full_llm_docs.txt:32928:VertexAiSessionService (class in google.adk.sessions)
+libs_docs/adk/full_llm_docs.txt:32956:google.adk.agents module
+libs_docs/adk/full_llm_docs.txt:32957:google.adk.artifacts module
+libs_docs/adk/full_llm_docs.txt:32958:google.adk.code_executors module
+libs_docs/adk/full_llm_docs.txt:32959:google.adk.evaluation module
+libs_docs/adk/full_llm_docs.txt:32960:google.adk.events module
+libs_docs/adk/full_llm_docs.txt:32961:google.adk.examples module
+libs_docs/adk/full_llm_docs.txt:32962:google.adk.memory module
+libs_docs/adk/full_llm_docs.txt:32963:google.adk.models module
+libs_docs/adk/full_llm_docs.txt:32964:google.adk.planners module
+libs_docs/adk/full_llm_docs.txt:32965:google.adk.runners module
+libs_docs/adk/full_llm_docs.txt:32966:google.adk.sessions module
+libs_docs/adk/full_llm_docs.txt:32967:google.adk.tools package
+libs_docs/adk/full_llm_docs.txt:32975:google.adk.agents
+libs_docs/adk/full_llm_docs.txt:32976:google.adk.artifacts
+libs_docs/adk/full_llm_docs.txt:32977:google.adk.code_executors
+libs_docs/adk/full_llm_docs.txt:32978:google.adk.evaluation
+libs_docs/adk/full_llm_docs.txt:32979:google.adk.events
+libs_docs/adk/full_llm_docs.txt:32980:google.adk.examples
+libs_docs/adk/full_llm_docs.txt:32981:google.adk.memory
+libs_docs/adk/full_llm_docs.txt:32982:google.adk.models
+libs_docs/adk/full_llm_docs.txt:32983:google.adk.planners
+libs_docs/adk/full_llm_docs.txt:32984:google.adk.runners
+libs_docs/adk/full_llm_docs.txt:32985:google.adk.sessions
+libs_docs/adk/full_llm_docs.txt:32986:google.adk.tools
+libs_docs/adk/full_llm_docs.txt:32987:google.adk.tools.application_integration_tool
+libs_docs/adk/full_llm_docs.txt:32988:google.adk.tools.google_api_tool
+libs_docs/adk/full_llm_docs.txt:32989:google.adk.tools.mcp_tool
+libs_docs/adk/full_llm_docs.txt:32990:google.adk.tools.openapi_tool
+libs_docs/adk/full_llm_docs.txt:32991:google.adk.tools.retrieval
+libs_docs/copilotkit_docs/adk/shared-state/in-app-agent-write.mdx:54:        from google.adk.agents import LlmAgent
+libs_docs/copilotkit_docs/adk/shared-state/in-app-agent-write.mdx:55:        from google.adk.agents.callback_context import CallbackContext
+libs_docs/copilotkit_docs/adk/shared-state/in-app-agent-write.mdx:56:        from google.adk.models import LlmResponse, LlmRequest
+libs_docs/copilotkit_docs/adk/shared-state/in-app-agent-write.mdx:58:        from google.adk.tools import ToolContext
+libs_docs/copilotkit_docs/adk/shared-state/in-app-agent-read.mdx:53:          from google.adk.agents import LlmAgent
+libs_docs/copilotkit_docs/adk/shared-state/in-app-agent-read.mdx:54:          from google.adk.agents.callback_context import CallbackContext
+libs_docs/copilotkit_docs/adk/shared-state/in-app-agent-read.mdx:55:          from google.adk.models import LlmResponse, LlmRequest
+libs_docs/copilotkit_docs/adk/shared-state/in-app-agent-read.mdx:57:          from google.adk.tools import ToolContext
+libs_docs/composio_next/python/config/mypy.ini:17:[mypy-google.adk.*]
+libs_docs/composio_next/python/providers/google_adk/google_adk_demo.py:2:from google.adk.agents import Agent
+libs_docs/composio_next/python/providers/google_adk/google_adk_demo.py:3:from google.adk.runners import Runner
+libs_docs/composio_next/python/providers/google_adk/google_adk_demo.py:4:from google.adk.sessions import InMemorySessionService
+libs_docs/composio_next/python/providers/google_adk/composio_google_adk/provider.py:5:from google.adk.tools import FunctionTool
