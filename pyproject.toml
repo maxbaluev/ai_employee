@@ -16,6 +16,7 @@ dependencies = [
   "fastapi>=0.118.0",
   "uvicorn[standard]>=0.37.0",
   "httpx>=0.27.0,<1.0.0",
+  "python-dotenv>=1.0.1",
 
   # Validation / schema-driven planning & forms
   "pydantic>=2.11.10",
@@ -37,7 +38,9 @@ dependencies = [
 
   # Agents / Realtime
   "google-adk>=1.15.1",             # Outcome Planner, Drafter, Compliance, QA (typed)
+  "google-genai>=1.20.0",
   "livekit-agents>=1.2.0",
+  "ag-ui-adk>=0.1.0",
 
   # MCP (Composio) — Python SDK
   "composio>=0.8.20"                # composio python client (auth, list tools, run tools)

@@ -1,79 +1,9 @@
-We at preparing stage, we have draft of docs/arch.md and draft of @ux.md
+We at preparing stage, we have draft of docs/arch.md, draft of docs/ux.md, draft of pyrpoject.toml and draft of package.json
 
-Our task is to validate and verify ideas there 
+Our task is to validate and verify ideas in this two files and rewrite it based on insights that you get by inspecting libs source code and docs
 
-```
-maxbaluev@bms:~/ai_employee/libs_docs$ tree -L 2
-.
-├── adk
-│   └── full_llm_docs.txt
-├── composio_next
-│   ├── CLAUDE.md
-│   ├── CONTRIBUTING.md
-│   ├── Dockerfile
-│   ├── INSTALL.md
-│   ├── README.md
-│   ├── context7.json
-│   ├── eslint.config.mjs
-│   ├── fern
-│   ├── install.sh
-│   ├── package.json
-│   ├── pnpm-lock.yaml
-│   ├── pnpm-workspace.yaml
-│   ├── public
-│   ├── pyproject.toml
-│   ├── python
-│   ├── ts
-│   ├── tsconfig.base.json
-│   ├── turbo.json
-│   └── uv.lock
-├── copilotkit_docs
-│   ├── (root)
-│   ├── adk
-│   ├── ag2
-│   ├── agno
-│   ├── crewai-crews
-│   ├── crewai-flows
-│   ├── direct-to-llm
-│   ├── langgraph
-│   ├── llamaindex
-│   ├── mastra
-│   ├── meta.json
-│   ├── pydantic-ai
-│   └── reference
-└── copilotkit_examples
-    ├── Dockerfile.agent-js
-    ├── Dockerfile.agent-python
-    ├── Dockerfile.ui
-    ├── ag2
-    ├── agno
-    ├── coagents-ai-researcher
-    ├── coagents-enterprise-crewai-crews
-    ├── coagents-qa
-    ├── coagents-qa-native
-    ├── coagents-qa-text
-    ├── coagents-research-canvas
-    ├── coagents-routing
-    ├── coagents-shared-state
-    ├── coagents-starter
-    ├── coagents-starter-crewai-crews
-    ├── coagents-starter-crewai-flows
-    ├── coagents-travel
-    ├── coagents-wait-user-input
-    ├── copilot-anthropic-pinecone
-    ├── copilot-chat-with-your-data
-    ├── copilot-form-filling
-    ├── copilot-fully-custom
-    ├── copilot-openaI-mongodb-atlas-vector-search
-    ├── copilot-state-machine
-    ├── demo-viewer
-    ├── e2e
-    ├── helmfile
-    ├── langgraph-tutorial-customer-support
-    ├── langgraph-tutorial-quickstart
-    ├── llamaindex
-    ├── mastra
-    ├── saas-dynamic-dashboards
-    └── shared
-
-```
+0. See on files above to understand with what we should work.
+1. See on libs_docs/ dolfer and inspect adk docs, copilotkit docs and exampels and composio docs.
+2. Based on knowledge and insights rewrite docs/arch.md and docs/ux.md, actualize pyrpoject.toml and package.json
+3. Write docs/todo.md with detailed log that openai codex can use to create software step by step.
+4. Finish

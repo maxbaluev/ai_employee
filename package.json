@@ -1,7 +1,15 @@
 {
-  "name": "adk-starter",
+  "name": "ai-employee-platform-ui",
   "version": "0.1.0",
   "private": true,
+  "description": "Next.js + CopilotKit shell for the Composio-only AI employee platform",
+  "keywords": [
+    "copilotkit",
+    "composio",
+    "adk",
+    "ag-ui",
+    "ai-employee"
+  ],
   "scripts": {
     "dev": "concurrently \"npm run dev:ui\" \"npm run dev:agent\" --names ui,agent --prefix-colors blue,green --kill-others",
     "dev:debug": "LOG_LEVEL=debug npm run dev",
