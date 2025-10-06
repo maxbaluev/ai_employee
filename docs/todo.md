@@ -51,7 +51,7 @@ Plane, Composio, Approvals/UI, Data/Worker, Observability, Governance).
 - [x] Document `/metrics` endpoint + collector configuration; update metric catalog. (`docs/operations/run-and-observe.md`, `docs/references/observability.md`)
 - [x] Record dashboard placeholders and PromQL queries until real screenshots exist. (`docs/references/observability.md`)
 - [x] Document Supabase Cron scheduling approach across architecture and operations docs; replace all APScheduler references. (`docs/architecture/data-roadmap.md`, `docs/architecture/composio-execution.md`, `docs/operations/run-and-observe.md`, `AGENTS.md`)
-- [ ] Expand incident runbooks with real postmortems and comms templates. (`docs/operations/runbooks/`)
+- [x] Expand incident runbooks with real postmortems and comms templates. (`docs/operations/runbooks/`, `docs/operations/runbooks/postmortems/outbox-dlq-2025-09-18.md`)
 - [ ] Wire Composio OAuth env vars once backend settings are ready. (`docs/implementation/composio-tooling.md`, `agent/services/settings.py`)
 
 ## 7. Governance & Documentation
@@ -63,9 +63,8 @@ Plane, Composio, Approvals/UI, Data/Worker, Observability, Governance).
 
 ### Next Up
 
-1. Expand incident runbooks with real postmortems and comms templates. (`docs/operations/runbooks/`)
-2. Document schema-driven approval forms once Composio catalog persistence lands. (`docs/implementation/ui-surfaces.md`, `docs/architecture/composio-execution.md`)
-3. Wire Composio OAuth environment variables after settings contract finalised. (`docs/implementation/composio-tooling.md`, `agent/services/settings.py`)
+1. Document schema-driven approval forms once Composio catalog persistence lands. (`docs/implementation/ui-surfaces.md`, `docs/architecture/composio-execution.md`)
+2. Wire Composio OAuth environment variables after settings contract finalised. (`docs/implementation/composio-tooling.md`, `agent/services/settings.py`)
 
 Update this tracker as milestones land. Remove completed items only when the associated
 code, documentation, and tests are merged.

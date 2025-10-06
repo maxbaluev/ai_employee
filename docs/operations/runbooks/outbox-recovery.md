@@ -71,7 +71,8 @@ updates or direct worker intervention.
 ## Post-Mortem
 
 - Capture root cause, resolution, and preventive actions using the
-  [`Incident Postmortem Template`](incident-template.md).
+  [`Incident Postmortem Template`](incident-template.md) and reference recent
+  examples under [`postmortems/`](postmortems/outbox-dlq-2025-09-18.md).
 - Store supporting artefacts (logs, SQL, screenshots) with the incident ticket or under
   `docs/operations/runbooks/artifacts/<incident-id>/` for future audits.
 - Add guardrail/worker tests covering the failure scenario.

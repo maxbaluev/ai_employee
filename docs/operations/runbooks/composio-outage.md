@@ -19,6 +19,8 @@ errors. Execute it even in staging to keep muscle memory fresh.
 2. **Retry strategy:** confirm Tenacity backoff is respectably capped to avoid hammering
    the provider.
 3. **Open incident channel** with stakeholders (product, support, leadership).
+   - Announce using the communication templates in
+     [`incident-template.md`](incident-template.md#communication-templates).
 
 ## Diagnosis Checklist
 

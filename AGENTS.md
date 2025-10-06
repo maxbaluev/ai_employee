@@ -89,13 +89,27 @@ Each phase references the authoritative items in `docs/todo.md`. Legend: ✅ don
 - Observability contracts defined (`docs/operations/run-and-observe.md`, `docs/references/observability.md`).
 
 ### Phase 1 · Control Plane Modularisation 🔄
-Goals: harden callbacks/guardrails/services and prep the multi-employee coordinator.
-- [x] Guardrail modules with pytest coverage (`agent/guardrails/*`, `tests/guardrails/`).
-- [x] Callback builders for before/after hooks (`agent/callbacks/before.py`, `agent/callbacks/after.py`).
-- [x] Service abstractions with in-memory defaults (`agent/services/*.py`).
-- [ ] Replace Proverbs demo diagram with modular blueprint (`docs/architecture/agent-control-plane.md`).
-- [ ] Scaffold `agent/agents/coordinator.py` for multi-employee orchestration.
-See `docs/implementation/backend-callbacks.md` and `docs/governance/security-and-guardrails.md`.
+
+**Goal** Harden callback + guardrail orchestration and service boundaries so the desk blueprint stays stable while we layer in multi-employee coordination.
+
+**Baseline**
+- Guardrail modules (`agent/guardrails/*.py`) are wired through `agent/callbacks/guardrails.py` and exercised in `tests/guardrails/`; each exposes a pure `check(...) -> GuardrailResult` consumed by `build_before_model_modifier` so refusals short-circuit safely.
+- Callback builders in `agent/callbacks/before.py` and `agent/callbacks/after.py` own prompt enrichment, shared-state seeding, envelope enqueueing, and deterministic use of `callback_context.end_invocation` as outlined in `docs/implementation/backend-callbacks.md`.
+- Service shims in `agent/services/catalog.py`, `agent/services/objectives.py`, `agent/services/outbox.py`, and `agent/services/audit.py` mirror the Supabase contracts documented in `docs/architecture/agent-control-plane.md`, keeping tests and local runs Supabase-free.
+
+**In Flight**
+- Replace the remaining Proverbs-era diagram with the modular blueprint now captured in `docs/architecture/agent-control-plane.md` so reviewers see the same component map referenced here and in `docs/todo.md`.
+- Scaffold `agent/agents/coordinator.py` to compose shared services and callbacks for multi-employee orchestration without duplicating desk-specific wiring; follow the “Target Package Layout” guidance before introducing Supabase persistence.
+
+**Guardrails**
+- Adhere to the matrix in `docs/governance/security-and-guardrails.md`: log every guardrail decision via `StructlogAuditLogger`, reuse the refusal tone guide, and block runs by setting `callback_context.end_invocation = True`.
+- New guardrails land as pure modules registered through `agent/callbacks/guardrails.py`, paired with pytest coverage in `tests/guardrails/` to keep the enforcement layer deterministic and dependency-injected.
+
+**References**
+- `docs/architecture/agent-control-plane.md`
+- `docs/implementation/backend-callbacks.md`
+- `docs/governance/security-and-guardrails.md`
+- `docs/todo.md`
 
 ### Phase 2 · Composio Integration & Catalog 📋
 Goals: persist the tool catalog, manage OAuth, execute envelopes.
@@ -125,7 +139,7 @@ Depends on Phase 2 envelope contracts.
 Goals: production telemetry, alerts, and runbooks.
 - [ ] Expose `/metrics` FastAPI route + integrate collectors (`docs/operations/run-and-observe.md`).
 - [ ] Fill observability dashboard placeholders with PromQL queries (`docs/references/observability.md`).
-- [ ] Expand incident runbooks with real postmortems + comms templates (`docs/operations/runbooks/`).
+- [x] Expand incident runbooks with real postmortems + comms templates (`docs/operations/runbooks/`).
 Requires Phase 4 worker telemetry to be emitting.
 
 ### Phase 6 · Governance & Documentation Hygiene ✅ (ongoing)

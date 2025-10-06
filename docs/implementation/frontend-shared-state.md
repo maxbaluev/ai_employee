@@ -12,6 +12,14 @@
 3. **Frontend actions for UX polish** – Use `useCopilotAction` to let the agent request
    UI-only effects (e.g. highlighting cards, pre-filling filters). Keep these actions
    idempotent and reversible.
+4. **Predictive updates** – Mirror the vendor pattern in
+   `libs_docs/copilotkit_docs/pydantic-ai/shared-state/predictive-state-updates.mdx` by
+   emitting `StateDeltaEvent`s whenever the agent is running a multi-step tool. Emit a
+   final snapshot once execution concludes to avoid stale UI state.
+5. **Generative UI** – Follow the CopilotKit guides in
+   `libs_docs/copilotkit_docs/adk/generative-ui/` to render custom components (approval
+   forms, evidence previews) from agent tool calls. Pair every renderable payload with a
+   stable component name so Next.js can hydrate it predictably.
 
 ## Example Template
 
@@ -53,6 +61,31 @@ export function DeskView() {
   ));
 }
 ```
+
+### Predictive State Updates
+
+- Agents should stream incremental progress from callbacks using `StateDeltaEvent`.
+  Reuse the timing guidance from
+  `libs_docs/copilotkit_docs/pydantic-ai/shared-state/predictive-state-updates.mdx`: send
+  optimistic deltas while long-running tools execute, then replace them with a snapshot
+  once the tool finishes.
+- Encode step metadata (e.g. `{ "queue": [...], "lastUpdated": iso8601 }`) so the UI
+  can surface spinners or risk banners while envelopes are pending.
+- Avoid flooding the runtime—bundle related deltas into a single event and let
+  CopilotKit coalesce updates on the client.
+
+### Tool-Based Generative UI
+
+- `useCopilotAction` supports a `render` handler that mirrors the patterns documented in
+  `libs_docs/copilotkit_docs/adk/generative-ui/tool-based.mdx`. The control plane should
+  return structured payloads (`{ "name": "ApprovalModal", "props": {...} }`) so custom
+  React components (approval modals, evidence cards, Supabase dashboards) mount inside
+  the sidebar.
+- Keep props serialisable—store large payloads in shared state or Supabase and pass IDs
+  instead of blobs. This matches the `render` guidance in the vendor docs and avoids
+  hydration errors.
+- Combine render payloads with predictive updates to keep desk cards and modals in sync
+  with the agent timeline.
 
 ## State Contract
 

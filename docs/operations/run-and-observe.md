@@ -101,6 +101,22 @@ ensures schedules survive agent restarts and scale independently.
 
 Update this table whenever new jobs are added.
 
+### Edge Functions & pg_net Patterns
+
+- Cron jobs and reactive pipelines should call Edge Functions using the `net.http_post`
+  approach documented in `libs_docs/supabase/llms_docs.txt` (search for `cron.schedule`
+  examples). Package payloads as JSON and include the `service_role` bearer token so the
+  function can interact with Postgres securely.
+- Use Edge Functions to fan out telemetry or hydrate external APIs. Keep these functions
+  idempotent—store a `job_run_id` in Supabase so retries do not duplicate work.
+- For synchronous agent tooling (e.g. evidence embeddings), call Edge Functions via the
+  Supabase JS client: `supabase.functions.invoke('catalog-sync', { body })`. This mirrors
+  the patterns in `libs_docs/composio_next/python/README.md` where the SDK exchanges
+  tokens before executing a tool.
+- Prefer Edge Functions over direct Postgres RPC for operations that require secret
+  management or third-party API calls. Reserve RPCs for pure data mutations that run
+  inside the database transaction boundary.
+
 ## Health Checks
 
 - UI: rely on Next.js built-in health endpoint (`/`).

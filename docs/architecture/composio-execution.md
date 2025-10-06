@@ -1,6 +1,6 @@
 # Composio Execution Layer
 
-**Status:** In progress (Supabase control plane + Outbox worker implemented)
+**Status:** Implemented (Supabase catalog + Outbox worker) · In progress (connected account UX, telemetry)
 
 ADR-0001 locks the platform to Composio as the only mechanism for executing actions on
 third-party SaaS apps. This document provides the contract for implementing that
@@ -17,37 +17,44 @@ integration end-to-end.
 ## Reference Material
 
 - `libs_docs/composio_next/python/providers/google_adk/google_adk_demo.py` – example of
-  requesting tools and running them inside an ADK agent via `GoogleAdkProvider`.
-- `libs_docs/composio_next/python/README.md` – SDK setup instructions.
-- `libs_docs/composio_next/README.md` – high-level overview of the Composio platform.
+  requesting tools and running them inside an ADK agent via `GoogleAdkProvider` (mirrors
+  the control plane wiring in `agent/agents/control_plane.py`).
+- `libs_docs/composio_next/python/README.md` – SDK setup instructions, scopes glossary,
+  and OAuth flow expectations.
+- `libs_docs/adk/full_llm_docs.txt` – callback and guardrail composition patterns used by
+  the control plane to short-circuit unsafe runs (`ctx.end_invocation = True`).
+- `libs_docs/supabase/llms_docs.txt` – Supabase Cron + Edge Function patterns for
+  catalog sync and telemetry fan-out.
 
 ## Proposed Flow
 
 ```
 FastAPI Catalog Service (Supabase-backed)
  ├─ GET /tools → returns cached catalog entries per tenant
- ├─ POST /connected-accounts/initiate → returns OAuth URL
- └─ POST /connected-accounts/:id/enable|disable
+ ├─ POST /connected-accounts/initiate → returns OAuth URL (planned UI/API surface)
+ └─ POST /connected-accounts/:id/enable|disable (planned)
 
 Supabase Cron (recurring jobs)
  └─ Nightly job: composio.tools.get(...) → persist JSON schema + scopes in Supabase
-    Configure via `cron.schedule()` to invoke an Edge Function that runs the catalog sync.
+    Configure via `cron.schedule()` to invoke an Edge Function that runs the catalog sync
+    (pattern documented in `libs_docs/supabase/llms_docs.txt`).
     All recurring jobs managed via Supabase dashboard (Integrations → Cron) or SQL.
     Track cron definitions in `docs/operations/run-and-observe.md`.
 
 Agent (google.adk)
  ├─ Discovers tool metadata from catalog
- ├─ Includes required scopes in proposals
+ ├─ Includes required scopes in proposals (adds to desk shared state)
  └─ Produces envelope → Outbox
 
 Outbox Worker (`worker/outbox.py`)
  ├─ Pops envelope, checks guardrails (quiet hours, trust, DNC)
  ├─ Calls composio.tools.execute(user_id, tool_slug, args, connected_account_id)
- └─ Persists outcome + latency + conflict flags
+ └─ Persists outcome + latency + conflict flags (Supabase `outbox` + `outbox_dlq` tables)
 
 UI
- ├─ Displays schema-driven edit forms using cached JSON schema
- └─ Shows execution result and audit trail
+ ├─ Displays schema-driven edit forms using cached JSON schema (Desk surface today,
+    Approvals modal planned)
+ └─ Shows execution result and audit trail (via `StateDeltaEvent`s and audit log entries)
 ```
 
 ### Sequence Overview
@@ -93,7 +100,8 @@ retrieval before tool execution:
 
 Edge Functions with the built-in `gte-small` model can generate embeddings synchronously
 without external API calls, keeping latency low and reducing dependencies. Reference
-`libs_docs/supabase/llms_docs.txt` (lines 48117–48230) for implementation patterns.
+`libs_docs/supabase/llms_docs.txt` (lines 48117–48230) for implementation patterns and
+`docs/architecture/data-roadmap.md` for how embeddings feed shared state.
 
 ### Supabase Integration Summary
 
