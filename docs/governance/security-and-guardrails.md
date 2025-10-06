@@ -18,13 +18,33 @@ autonomous behaviour.
 
 | Guardrail | Owner | Implementation Notes | Status |
 |-----------|-------|----------------------|--------|
-| Quiet hours / DNC | Backend | Callback checks before enqueueing Outbox jobs. | Planned |
-| Trust thresholds | Backend | Daily job updates trust score; auto-run only above 0.8. | Planned |
+| Quiet hours / DNC | Backend | `agent/guardrails/quiet_hours.check` blocks during configured quiet window; see `tests/guardrails/test_quiet_hours.py`. | Implemented |
+| Trust thresholds | Backend | `agent/guardrails/trust.check` treats missing scores as `0.0` and blocks until the trust score meets the threshold; see `tests/guardrails/test_trust.py`. | Implemented |
+| Scope enforcement | Backend | `agent/guardrails/scopes.check` normalises scope strings and reports missing entries; see `tests/guardrails/test_scopes.py`. | Implemented |
+| Evidence requirement | Backend | `agent/guardrails/evidence.check` verifies proposals contain supporting evidence; see `tests/guardrails/test_evidence.py`. | Implemented |
 | Schema validation | Frontend + Backend | JSON Schema enforced client + server side. | Planned |
 | Audit log | Backend | Supabase `audit_log` table with append-only policy. | Planned |
 | Log redaction | Backend | Use `structlog` processors to scrub OAuth tokens, PII. | Planned |
 
 Update the status column as each guardrail ships.
+
+### Behaviour Summary
+
+- **Quiet hours**: Blocks tool execution during the tenant-configured window; outside the
+  window the guardrail returns an allow result with context in the reason string.
+- **Trust thresholds**: Treats a missing trust score as `0.0`; actions auto-run only when
+  the score meets or exceeds the configured threshold, otherwise a human must approve.
+- **Scope enforcement**: Normalises requested/enabled scopes (strip + lowercase) and
+  blocks when any requested scope is absent, listing the missing values to guide the
+  operator.
+- **Evidence requirement**: `ensure_evidence_present` bypasses validation when no
+  proposal is present; once a proposal exists, the guardrail blocks when evidence is
+  missing or empty.
+
+Fast path wiring for all four guardrails lives in
+`agent/callbacks/guardrails.py` and is consumed by `agent/callbacks/before.py` within
+`run_guardrails`. Refer to `docs/implementation/backend-callbacks.md` for signature
+details and integration examples.
 
 ## Incident Response Expectations
 

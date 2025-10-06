@@ -77,6 +77,43 @@ export function DeskShell({ children }: { children: React.ReactNode }) {
 - Log every approval decision through the shared state so callbacks and audit services
   remain the source of truth.
 
+### Schema-driven Approval Forms
+
+- Source the schema from the catalog (`tool_catalog.schema`) and map it into the generic
+  form renderer (`JSONSchemaForm` or CopilotKit primitives). Reference
+  `docs/schemas/approval-modal.json` for the canonical JSON Schema exposed via shared
+  state (see Approval Flow Contract in `docs/implementation/frontend-shared-state.md`).
+- Example scope escalation payload:
+
+  ```json
+  {
+    "envelopeId": "env_123",
+    "proposal": {
+      "summary": "Request calendar scope upgrade",
+      "evidence": ["Scope mismatch detected for Google Calendar"]
+    },
+    "requiredScopes": ["CALENDAR.READ", "CALENDAR.WRITE"],
+    "approvalState": "pending"
+  }
+  ```
+
+- Example evidence request payload:
+
+  ```json
+  {
+    "envelopeId": "env_456",
+    "proposal": {
+      "summary": "Submit expense report",
+      "evidence": ["Receipt.pdf", "Policy clause"]
+    },
+    "requiredScopes": [],
+    "approvalState": "pending"
+  }
+  ```
+
+- Wire the submit/cancel actions to the CopilotKit handler exactly as shown in the
+  Playwright patterns (shared state test) to keep smoke coverage consistent.
+
 ## 4. UX & Accessibility Checklist
 
 - Meet WCAG AA contrast for every card and button; copy CopilotKit's token palette where

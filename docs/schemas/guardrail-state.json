@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.example.com/schemas/guardrail-state.json",
+  "$comment": "DRAFT: sync with frontend-shared-state.md before production use.",
+  "title": "GuardrailState",
+  "type": "object",
+  "properties": {
+    "quietHours": {
+      "type": "object",
+      "required": ["allowed", "message"],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "message": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "trust": {
+      "type": "object",
+      "required": ["allowed"],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "score": { "type": "number" },
+        "source": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["required"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "missingEvidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

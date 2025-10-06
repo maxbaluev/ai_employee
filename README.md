@@ -1,126 +1,98 @@
-# CopilotKit <> ADK Starter
+# AI Employee Platform
 
-This is a starter template for building AI agents using Google's [ADK](https://google.github.io/adk-docs/) and [CopilotKit](https://copilotkit.ai). It provides a modern Next.js application with an integrated investment analyst agent that can research stocks, analyze market data, and provide investment insights.
+This repository is the reference implementation for the Composio-only AI Employee
+experience documented under `docs/`. It wires a Next.js + CopilotKit frontend to a
+Google ADK agent, and captures the roadmap for layering in Supabase persistence,
+Composio execution, and guardrails.
 
-## Prerequisites
+## Toolchain
 
-- Node.js 18+
-- Python 3.12+
-- Google Makersuite API Key (for the ADK agent) (see https://makersuite.google.com/app/apikey)
-- Any of the following package managers:
-  - pnpm (recommended)
-  - npm
-  - yarn
-  - bun
+We standardise on **mise + uv + pnpm** so every contributor and AI assistant shares the
+same environment contracts.
 
-> **Note:** This repository ignores lock files (package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb) to avoid conflicts between different package managers. Each developer should generate their own lock file using their preferred package manager. After that, make sure to delete it from the .gitignore.
+| Component | Version | How we manage it |
+|-----------|---------|-------------------|
+| Node.js   | 22.x    | `mise` (`.mise.toml`) |
+| pnpm      | 10.18.x | `corepack prepare pnpm@10 --activate` (run once per shell) |
+| Python    | 3.13.x  | `mise` + `uv` |
 
-## Getting Started
+Install the toolchain once per machine (mirrors the guidance in
+`docs/getting-started/setup.md`):
 
-1. Install dependencies using your preferred package manager:
 ```bash
-# Using pnpm (recommended)
-pnpm install
-
-# Using npm
-npm install
-
-# Using yarn
-yarn install
-
-# Using bun
-bun install
+curl https://mise.jdx.dev/install.sh | sh
+curl -fsSL https://astral.sh/uv/install.sh | sh
+corepack enable && corepack prepare pnpm@10 --activate
 ```
 
-2. Install Python dependencies for the ADK agent:
+## Quick Start
+
 ```bash
-# Using pnpm
-pnpm install:agent
+# 1. Clone then install pinned runtimes & dependencies
+mise install
+pnpm install          # triggers `uv sync --extra test`
 
-# Using npm
-npm run install:agent
+# 2. Configure environment variables (see docs/getting-started/setup.md)
+cp .env.example .env
+echo 'GOOGLE_API_KEY=...' >> .env
 
-# Using yarn
-yarn install:agent
+# 3. Run the local loop (Next.js + ADK agent)
+pnpm dev              # or `mise run dev`
 
-# Using bun
-bun run install:agent
+# 4. Visit http://localhost:3000 and curl http://localhost:8000/healthz
 ```
 
-> **Note:** This will automatically setup a `.venv` (virtual environment) inside the `agent` directory.
->
-> To activate the virtual environment manually, you can run:
-> ```bash
-> source agent/.venv/bin/activate
-> ```
+The `scripts/` folder is now uv-aware:
 
+- `scripts/run-agent.*` executes `uv run python -m agent` so it always uses the synced
+  virtual environment.
+- `scripts/setup-agent.*` simply calls `uv sync --extra test` for parity with the
+  package.json `install:agent` script.
 
-3. Set up your Google API key:
-```bash
-export GOOGLE_API_KEY="your-google-api-key-here"
-```
+## Workflow Scripts
 
-4. Start the development server:
-```bash
-# Using pnpm
-pnpm dev
+All package scripts assume pnpm; `mise run <task>` simply proxies to them.
 
-# Using npm
-npm run dev
+| Command | Purpose |
+|---------|---------|
+| `pnpm dev` | Run Next.js (`dev:ui`) and the ADK agent (`dev:agent`) concurrently. |
+| `pnpm run dev:ui` | Launch only the frontend. |
+| `pnpm run dev:agent` | Launch only the agent via uv. |
+| `pnpm build` / `pnpm start` | Build and serve the Next.js bundle. |
+| `pnpm lint` | ESLint (Next.js config). |
+| `pnpm install:agent` | Idempotent `uv sync --extra test`. |
 
-# Using yarn
-yarn dev
+## Documentation Map
 
-# Using bun
-bun run dev
-```
+Authoritative system documentation lives in `docs/`:
 
-This will start both the UI and agent servers concurrently.
+- `docs/README.md` – navigation hub linking to architecture, implementation, operations,
+  and governance guides.
+- `AGENTS.md` – deep-dive on the agent control plane, guardrails, and infrastructure.
+- `docs/todo.md` – layered delivery tracker mirroring every documentation area.
+- `docs/getting-started/` – environment setup, core concepts, onboarding.
+- `docs/architecture/` – component diagrams and contracts for frontend, agent, Composio,
+  and data layers.
+- `docs/implementation/` – task-focused how-tos for callbacks, shared state, schemas, and
+  UI surfaces.
+- `docs/operations/` – deployment, observability, and incident runbooks.
+- `docs/governance/` – ownership, security, and evergreen processes.
+- `docs/references/` – roadmap, glossary, product intent, requirements, observability.
 
-## Available Scripts
-The following scripts can also be run using your preferred package manager:
-- `dev` - Starts both UI and agent servers in development mode
-- `dev:debug` - Starts development servers with debug logging enabled
-- `dev:ui` - Starts only the Next.js UI server
-- `dev:agent` - Starts only the ADK agent server
-- `build` - Builds the Next.js application for production
-- `start` - Starts the production server
-- `lint` - Runs ESLint for code linting
-- `install:agent` - Installs Python dependencies for the agent
+Each document declares `Status:` so you know which behaviours are live. Keep the docs in
+lockstep with the code; reviewers are expected to block drift.
 
-## Documentation
+## TODO Tracker
 
-The main UI component is in `src/app/page.tsx`. You can:
-- Modify the theme colors and styling
-- Add new frontend actions
-- Customize the CopilotKit sidebar appearance
-
-## 📚 Documentation
-
-- [ADK Documentation](https://google.github.io/adk-docs/) - Learn more about the ADK and its features
-- [CopilotKit Documentation](https://docs.copilotkit.ai) - Explore CopilotKit's capabilities
-- [Next.js Documentation](https://nextjs.org/docs) - Learn about Next.js features and API
-
+`docs/todo.md` is the single backlog for engineering work across agent, frontend, data,
+and operations. Update it as milestones ship and reference it in PR descriptions when you
+close items.
 
 ## Contributing
 
-Feel free to submit issues and enhancement requests! This starter is designed to be easily extensible.
+- Use pnpm for JS scripts, uv for Python management, and `mise run` for task shortcuts.
+- Run the local verification checklist in `docs/getting-started/setup.md` before pushing.
+- Document every behaviour change; the governance checklist (`docs/governance/`)
+  enforces this policy.
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Troubleshooting
-
-### Agent Connection Issues
-If you see "I'm having trouble connecting to my tools", make sure:
-1. The ADK agent is running on port 8000
-2. Your Google API key is set correctly
-3. Both servers started successfully
-
-### Python Dependencies
-If you encounter Python import errors:
-```bash
-cd agent
-pip install -r requirements.txt
-```
+Happy hacking ✨

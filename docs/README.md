@@ -23,6 +23,8 @@ Use the navigation below to jump directly to what you need:
   `docs/decisions/`
 - **References** – product intent, requirement summaries, and terminology. ↳
   `docs/references/`
+- **TODO Tracker** – layered backlog covering every documentation area. ↳
+  `docs/todo.md`
 
 Every document declares its status so you know how much of the behaviour is present in
 this repository:

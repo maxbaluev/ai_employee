@@ -1,0 +1,2 @@
+-- Placeholder seed script.
+-- Populate reference data here once tenant bootstrap requirements are defined.

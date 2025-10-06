@@ -5,10 +5,10 @@ from __future__ import annotations
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
-try:  # pragma: no cover - optional dependency during unit tests
+try:
     from ag_ui_adk import add_adk_fastapi_endpoint
-except ImportError:  # pragma: no cover
-    add_adk_fastapi_endpoint = None  # type: ignore
+except ImportError:  # pragma: no cover - handled in fallback healthz path
+    add_adk_fastapi_endpoint = None
 
 from .agents.proverbs import build_proverbs_adk_agent
 from .services.settings import get_settings

@@ -1,9 +1,13 @@
 @echo off
-REM Navigate to the agent directory
-cd /d %~dp0\..\agent
+setlocal
 
-REM Activate the virtual environment
-call .venv\Scripts\activate.bat
+REM Navigate to the repository root (contains pyproject.toml)
+cd /d %~dp0\..
 
-REM Run the agent
-.venv\Scripts\python.exe agent.py 
+where uv >nul 2>&1
+if errorlevel 1 (
+  echo uv is required to run the agent. Install it from https://astral.sh/uv/install.sh
+  exit /b 1
+)
+
+uv run python -m agent

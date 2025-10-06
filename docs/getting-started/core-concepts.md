@@ -21,13 +21,15 @@ pieces fit together today and which extensions are coming next.
 
 ## 2. Agent Runtime (FastAPI + Google ADK)
 
-- `agent/agent.py` defines a single `LlmAgent` with callbacks that maintain a simple
-  “proverbs” state and a stubbed weather tool.
+- `agent/agent.py` currently exposes a placeholder “Proverbs” agent solely to prove the
+  ADK ↔ CopilotKit bridge. Treat it as scaffolding—new behaviour should target the
+  modular layout described in `AGENTS.md` and `docs/implementation/backend-callbacks.md`.
 - `ag_ui_adk` adds an HTTP endpoint (`/`) that streams AGUI events consumed by
   CopilotKit.
-- Planned: move prompt construction, guardrails, and multi-employee logic into dedicated
-  modules rather than living in a single file. See
-  `docs/implementation/backend-callbacks.md` for preview code.
+- Use the vendor samples in `libs_docs/adk/` and `libs_docs/composio_next/` as the
+  blueprint for multi-agent orchestration, guardrails, and Composio tooling.
+- Planned: break prompt construction, guardrails, and multi-employee logic into dedicated
+  packages with Supabase-backed services.
 
 ## 3. Composio Execution Layer (Planned Integration)
 

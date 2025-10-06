@@ -1,6 +1,6 @@
 # Run & Observe
 
-**Status:** Implemented (basic logging) · Planned (metrics, tracing, runbooks)
+**Status:** Implemented (logging baseline) · In progress (metrics/tracing wiring, runbooks)
 
 This guide outlines the operational baseline expected for every environment.
 
@@ -13,22 +13,59 @@ This guide outlines the operational baseline expected for every environment.
 
 ## Metrics
 
-Plan to expose the following via Prometheus or OTLP:
+Expose Prometheus-compatible metrics from the agent process and scrape them via Prometheus:
 
-| Metric | Type | Notes |
-|--------|------|-------|
-| `copilotkit_requests_total` | Counter | Label by agent, outcome. |
-| `composio_execution_latency_seconds` | Histogram | Include `tool_slug`, `status`. |
-| `outbox_queue_size` | Gauge | Pending envelopes per tenant. |
-| `scheduler_runs_total` | Counter | Warm scan + trickle refresh successes/failures. |
+1. **Instrument FastAPI** using `prometheus_client` and Starlette middleware.
 
-Add a `/metrics` endpoint to the FastAPI app once the control plane exists.
+   ```python
+   # agent/app.py (excerpt)
+   from prometheus_client import Counter, Gauge, Histogram, generate_latest
+   from starlette.middleware import Middleware
+   from starlette_exporter import PrometheusMiddleware
+
+   copilot_requests_total = Counter(
+       "copilotkit_requests_total", "Total AGUI requests", ["agent", "outcome"]
+   )
+   composio_latency_seconds = Histogram(
+       "composio_execution_latency_seconds", "Composio execution latency", ["tool", "status"]
+   )
+   outbox_queue_size = Gauge("outbox_queue_size", "Pending envelopes", ["tenant"])
+   scheduler_runs_total = Counter(
+       "scheduler_runs_total", "Scheduler runs", ["job", "status"]
+   )
+
+   app.add_middleware(PrometheusMiddleware)
+
+   @app.get("/metrics")
+   async def metrics():
+       return Response(generate_latest(), media_type="text/plain; version=0.0.4")
+   ```
+
+2. **Configure scraping** using Prometheus or an OpenTelemetry Collector with a
+   Prometheus receiver. The canonical sample lives in
+   `docs/references/observability.md`.
+
+| Metric | Type | Labels |
+|--------|------|--------|
+| `copilotkit_requests_total` | Counter | `agent`, `outcome` |
+| `composio_execution_latency_seconds` | Histogram | `tool`, `status` |
+| `outbox_queue_size` | Gauge | `tenant` |
+| `scheduler_runs_total` | Counter | `job`, `status` |
+| `outbox_processed_total` | Counter | `tenant`, `status=success|retry|failed` |
+| `outbox_dlq_size` | Gauge | `tenant` |
+
+Update dashboards and alerts whenever additional labels are added.
+
+For the canonical metric catalogue, dashboard outlines, and alert expressions, see
+`docs/references/observability.md`.
 
 ## Tracing
 
-- Use OpenTelemetry (OTLP) to trace requests from the UI through the runtime to the
-  agent and (eventually) Composio. Start by instrumenting FastAPI and the HTTP bridge.
-- Propagate trace IDs via headers when frontend calls REST endpoints.
+- Instrument FastAPI with `opentelemetry-instrumentation-fastapi`.
+- Configure exporters via OTLP env vars above and ensure trace IDs propagate from the
+  UI (`x-copilot-trace-id` header) into Composio calls.
+- Link traces to metrics using consistent `service.name` and span attributes
+  (`tenant`, `tool`).
 
 ## Health Checks
 
@@ -40,9 +77,9 @@ Add a `/metrics` endpoint to the FastAPI app once the control plane exists.
 
 | Scenario | Detection | First Response |
 |----------|-----------|----------------|
-| Composio outage | Execution error rate > X% | Follow `docs/operations/runbooks/composio-outage.md`. |
-| Outbox DLQ growth | `outbox_dlq_size > 0` for 5 minutes | Investigate envelopes, communicate to operators. |
-| Scheduler failure | `scheduler_runs_total{status="failure"}` increases | Disable autonomous runs, notify SRE. |
+| Composio outage | `copilotkit_requests_total{outcome="error"}` and `composio_execution_latency_seconds` > SLO | Follow `docs/operations/runbooks/composio-outage.md` |
+| Outbox DLQ growth | `outbox_dlq_size{tenant}` > 0 for 5 min | Follow `docs/operations/runbooks/outbox-recovery.md` |
+| Scheduler failure | `scheduler_runs_total{status="failure"}` increases | Disable autonomous runs, notify SRE; see `docs/operations/runbooks/scheduler.md` (TBD) |
 
 ## Local Troubleshooting
 

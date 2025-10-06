@@ -1,0 +1,18 @@
+[tools]
+node = "22"
+python = "3.13"
+
+[tasks.install]
+run = "pnpm install"
+
+[tasks.dev]
+run = "pnpm dev"
+
+[tasks.ui]
+run = "pnpm run dev:ui"
+
+[tasks.agent]
+run = "pnpm run dev:agent"
+
+[tasks.lint]
+run = "pnpm lint"

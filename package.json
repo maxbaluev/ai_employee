@@ -2,6 +2,7 @@
   "name": "ai-employee-platform-ui",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.18.0",
   "description": "Next.js + CopilotKit shell for the Composio-only AI employee platform",
   "keywords": [
     "copilotkit",
@@ -11,15 +12,15 @@
     "ai-employee"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev:ui\" \"npm run dev:agent\" --names ui,agent --prefix-colors blue,green --kill-others",
-    "dev:debug": "LOG_LEVEL=debug npm run dev",
+    "dev": "concurrently \"pnpm run dev:ui\" \"pnpm run dev:agent\" --names ui,agent --prefix-colors blue,green --kill-others",
+    "dev:debug": "LOG_LEVEL=debug pnpm run dev",
     "dev:agent": "./scripts/run-agent.sh || scripts/run-agent.bat",
     "dev:ui": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "install:agent": "./scripts/setup-agent.sh || scripts\\setup-agent.bat",
-    "postinstall": "npm run install:agent"
+    "install:agent": "uv sync --extra test",
+    "postinstall": "pnpm run install:agent"
   },
   "dependencies": {
     "@ag-ui/client": "0.0.38",

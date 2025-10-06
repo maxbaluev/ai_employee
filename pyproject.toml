@@ -7,7 +7,7 @@ name = "ai-employee-platform"
 version = "0.1.0"
 description = "Composio-only universal MCP AI Employee Platform (value-iterative, schema-driven, Outbox executor)."
 readme = "README.md"
-requires-python = ">=3.11,<4.0"
+requires-python = ">=3.13,<4.0"
 license = { text = "MIT" }
 authors = [{ name = "AI Employee Team", email = "dev@yourcompany.com" }]
 
@@ -31,7 +31,7 @@ dependencies = [
 
   # Scheduling & retries
   "APScheduler~=3.11.0",
-  "tenacity~=9.1.0",
+  "tenacity>=8.2,<9",
 
   # Logging
   "structlog~=25.4.0",
@@ -39,7 +39,7 @@ dependencies = [
   # Agent runtime + Google APIs
   "google-adk~=1.15.1",             # Outcome Planner, Drafter, Compliance, QA (typed)
   "ag-ui-adk~=0.3.1",
-  "google-genai~=1.41.0",
+  "google-genai~=1.40.0",
 
   # MCP (Composio) — Python SDK
   "composio~=0.8.20",
@@ -58,6 +58,15 @@ test = [
 api = "app.__main__:main"          # uvicorn launcher
 outbox = "worker.outbox:main"      # Outbox relay entrypoint
 plan = "agents.plan:main"          # manual plan trigger
+
+[tool.hatch.build.targets.wheel]
+packages = ["agent"]
+
+[tool.hatch.build.targets.sdist]
+include = ["agent"]
+
+[tool.uv]
+managed = true
 
 [tool.pytest.ini_options]
 minversion = "8.0"

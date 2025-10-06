@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Optional
 
-try:  # pragma: no cover - optional dependency during unit tests
+try:  # pragma: no cover - fail fast when google-adk is missing
     from google.adk.agents.callback_context import CallbackContext
     from google.adk.models import LlmRequest, LlmResponse
-except ImportError:  # pragma: no cover
-    CallbackContext = Any  # type: ignore
-    LlmRequest = Any  # type: ignore
-    LlmResponse = Any  # type: ignore
+except ImportError as exc:  # pragma: no cover
+    raise RuntimeError(
+        "google-adk must be installed to use the agent callbacks. "
+        "Install the vendor package and retry."
+    ) from exc
 from google.genai import types
 from google.genai.types import Content, Part
 

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.example.com/schemas/approval-modal.json",
+  "$comment": "DRAFT: sync with frontend-shared-state.md before production use.",
+  "title": "ApprovalModal",
+  "type": "object",
+  "required": ["envelopeId", "proposal", "requiredScopes"],
+  "properties": {
+    "envelopeId": { "type": "string" },
+    "proposal": {
+      "type": "object",
+      "required": ["summary", "evidence"],
+      "properties": {
+        "summary": { "type": "string" },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "requiredScopes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "approvalState": {
+      "type": "string",
+      "enum": ["pending", "authorized", "denied"],
+      "default": "pending"
+    }
+  },
+  "additionalProperties": false
+}

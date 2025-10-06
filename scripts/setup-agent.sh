@@ -1,15 +1,12 @@
 #!/bin/bash
+set -euo pipefail
 
-# Navigate to the agent directory
-cd "$(dirname "$0")/../agent" || exit 1
+ROOT_DIR="$(dirname "$0")/.."
+cd "$ROOT_DIR"
 
-# Create virtual environment if it doesn't exist
-if [ ! -d ".venv" ]; then
-  python3 -m venv .venv || python -m venv .venv
+if ! command -v uv >/dev/null 2>&1; then
+  echo "uv is required to set up the agent. Install it via https://astral.sh/uv/install.sh" >&2
+  exit 1
 fi
 
-# Activate the virtual environment
-source .venv/bin/activate
-
-# Install requirements using pip3 or pip
-(pip3 install -r requirements.txt || pip install -r requirements.txt)
+uv sync --extra test

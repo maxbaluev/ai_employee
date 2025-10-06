@@ -49,6 +49,10 @@ pnpm-lock.yaml
 bun.lockb
 
 # python
+**/__pycache__/
+*.pyc
 agent/venv/
-agent/__pycache__/
 agent/.venv/
+
+# agent tooling output
+/.code/agents/

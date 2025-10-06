@@ -5,6 +5,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Optional
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,7 +25,38 @@ class AppSettings(BaseSettings):
     enforce_scope_validation: bool = True
     require_evidence: bool = True
 
-    composio_api_key: Optional[str] = None
+    composio_api_key: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "composio_api_key",
+            "AI_EMPLOYEE_COMPOSIO_API_KEY",
+            "COMPOSIO_API_KEY",
+        ),
+    )
+    composio_client_id: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "composio_client_id",
+            "AI_EMPLOYEE_COMPOSIO_CLIENT_ID",
+            "COMPOSIO_CLIENT_ID",
+        ),
+    )
+    composio_client_secret: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "composio_client_secret",
+            "AI_EMPLOYEE_COMPOSIO_CLIENT_SECRET",
+            "COMPOSIO_CLIENT_SECRET",
+        ),
+    )
+    composio_redirect_url: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "composio_redirect_url",
+            "AI_EMPLOYEE_COMPOSIO_REDIRECT_URL",
+            "COMPOSIO_REDIRECT_URL",
+        ),
+    )
 
     model_config = SettingsConfigDict(
         env_prefix="AI_EMPLOYEE_",

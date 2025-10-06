@@ -20,7 +20,15 @@ from agent.callbacks.guardrails import (
 
 def _fake_context() -> CallbackContext:
     context = MagicMock(spec=CallbackContext)
-    context.state = {}
+    context.state = {
+        "trust": {
+            "score": 0.95,
+            "source": "test_fixture",
+        },
+        "proposal": {"evidence": ["doc://example"]},
+        "requested_scopes": {"crm.write"},
+        "enabled_scopes": {"crm.write"},
+    }
     return context
 
 

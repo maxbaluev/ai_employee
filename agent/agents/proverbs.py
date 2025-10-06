@@ -4,13 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-try:  # pragma: no cover - optional dependency in tests
-    from google.adk.agents import LlmAgent
-    from google.adk.tools import ToolContext
-except ImportError:  # pragma: no cover
-    LlmAgent = Any  # type: ignore
-    ToolContext = Any  # type: ignore
-
+from google.adk.agents import LlmAgent
+from google.adk.tools import ToolContext
 from ..callbacks import (
     before_model_modifier,
     on_before_agent,
@@ -42,12 +37,7 @@ def build_proverbs_adk_agent(settings: Optional[AppSettings] = None) -> Any:
 
     app_settings = settings or get_settings()
 
-    try:  # Import lazily to avoid hard dependency during tests
-        from ag_ui_adk import ADKAgent
-    except ImportError as exc:  # pragma: no cover
-        raise RuntimeError(
-            "ag_ui_adk is required to build the ADK agent. Install the vendor package"
-        ) from exc
+    from ag_ui_adk import ADKAgent
 
     proverbs_agent = LlmAgent(
         name="ProverbsAgent",

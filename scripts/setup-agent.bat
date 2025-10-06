@@ -1,14 +1,13 @@
 @echo off
-REM Navigate to the agent directory
-cd /d "%~dp0\..\agent" || exit /b 1
+setlocal
 
-REM Create virtual environment if it doesn't exist
-if not exist ".venv" (
-    python -m venv .venv
+REM Navigate to the repo root (contains pyproject.toml)
+cd /d "%~dp0\.."
+
+where uv >nul 2>&1
+if errorlevel 1 (
+  echo uv is required to set up the agent. Install it from https://astral.sh/uv/install.sh
+  exit /b 1
 )
 
-REM Activate the virtual environment
-call .venv\Scripts\activate.bat
-
-REM Install requirements using pip
-pip install -r requirements.txt 
+uv sync --extra test
