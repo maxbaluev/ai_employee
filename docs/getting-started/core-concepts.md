@@ -1,7 +1,7 @@
 # Core Concepts
 
-**Status:** Implemented (Next.js UI + FastAPI control plane + Supabase/Composio services) ·
-In progress (multi-employee coordinator, approvals UX)
+**Status:** Implemented (Next.js UI + FastAPI control plane + Supabase/Composio services + coordinator) ·
+In progress (approvals UX)
 
 The AI Employee Platform leans on production-ready vendor stacks (CopilotKit, Google ADK,
 Composio, Supabase) so the repository mostly focuses on wiring, guardrails, and shared
@@ -36,8 +36,8 @@ implementation guides.
 - Settings (`agent/services/settings.py`) provide a typed facade over environment
   variables so the runtime flips between in-memory doubles and Supabase-backed services
   without code changes.
-- Planned: `agent/agents/coordinator.py` will orchestrate multi-employee flows on top of
-  the same callback + service contracts.
+- `agent/agents/coordinator.py` orchestrates multi-employee flows on top of the same
+  callback + service contracts, keeping surface-specific wiring light.
 
 ## 3. Composio Execution Layer
 

@@ -3,10 +3,8 @@
 from types import SimpleNamespace
 
 from agent.agents.blueprints import DeskBlueprint
-from agent.agents.control_plane import (
-    ControlPlaneDependencies,
-    _build_enqueue_envelope_tool,
-)
+from agent.agents.coordinator import CoordinatorDependencies
+from agent.agents.control_plane import _build_enqueue_envelope_tool
 from agent.services import (
     AppSettings,
     InMemoryCatalogService,
@@ -17,7 +15,7 @@ from agent.services import (
 )
 
 
-def _build_dependencies() -> ControlPlaneDependencies:
+def _build_dependencies() -> tuple[CoordinatorDependencies, DeskBlueprint]:
     settings = AppSettings()
     blueprint = DeskBlueprint()
     catalog = InMemoryCatalogService(
@@ -46,19 +44,21 @@ def _build_dependencies() -> ControlPlaneDependencies:
     outbox = InMemoryOutboxService()
     audit = StructlogAuditLogger()
 
-    return ControlPlaneDependencies(
-        settings=settings,
-        catalog_service=catalog,
-        objectives_service=objectives,
-        outbox_service=outbox,
-        audit_logger=audit,
-        blueprint=blueprint,
+    return (
+        CoordinatorDependencies(
+            settings=settings,
+            catalog_service=catalog,
+            objectives_service=objectives,
+            outbox_service=outbox,
+            audit_logger=audit,
+        ),
+        blueprint,
     )
 
 
 def test_enqueue_envelope_tool_enqueues_record() -> None:
-    deps = _build_dependencies()
-    enqueue_tool = _build_enqueue_envelope_tool(deps)
+    deps, blueprint = _build_dependencies()
+    enqueue_tool = _build_enqueue_envelope_tool(deps, blueprint)
 
     tool_context = SimpleNamespace(state={})
     payload = {

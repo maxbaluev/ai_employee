@@ -1,8 +1,8 @@
 # Agent & Control Plane Architecture
 
 **Status (October 6, 2025):** Implemented (FastAPI + control plane ADK agent +
-in-memory catalog/outbox) · In progress (Supabase persistence, multi-employee
-orchestration) · Planned (Outbox worker, observability surface)
+coordinator + in-memory catalog/outbox) · In progress (Supabase persistence,
+multi-employee orchestration flows) · Planned (Outbox worker, observability surface)
 
 This document explains how the Python control plane exposes agents over FastAPI today
 and how we will evolve the package into a modular, service-oriented architecture. Treat
@@ -39,7 +39,7 @@ agent/
  ├─ app.py                      # FastAPI wiring + settings bootstrap
  ├─ agents/
  │   ├─ control_plane.py        # Control plane agent wiring (implemented)
- │   ├─ coordinator.py          # Planned multi-employee orchestrator
+ │   ├─ coordinator.py          # Shared orchestration across surfaces (implemented)
  │   └─ blueprints/
  │       ├─ desk.py             # Desk surface prompt + state helpers (implemented)
  │       └─ approvals.py        # Planned approval-specialised blueprint
@@ -86,7 +86,7 @@ flowchart TD
 | Capability | Module(s) | Notes |
 |------------|-----------|-------|
 | FastAPI surface | `agent/app.py` | Hosts `/` (AGUI stream) and `/healthz`. Future `/metrics` must reuse the same app instance. |
-| Agent orchestration | `agent/agents/*` | Compose blueprints, callbacks, and shared state per surface. Multi-employee coordination lives in `coordinator.py`. |
+| Agent orchestration | `agent/agents/*` | Compose blueprints, callbacks, and shared state per surface. `coordinator.py` centralises dependency wiring across surfaces. |
 | Prompt & guardrail synthesis | `agent/callbacks/before.py`, `agent/guardrails/*` | Guardrail checks (`quiet_hours`, `trust`, `scopes`, `evidence`) run before the language model call and emit structured refusals. |
 | Plan execution & summaries | `agent/callbacks/after.py` | Stream `StateDeltaEvent`s, short-circuit via `callback_context.end_invocation`, and summarise tool runs. |
 | Settings & dependency injection | `agent/services/settings.py` | Provides `AppSettings`. Inject into services and callbacks to avoid global state. |
@@ -178,9 +178,9 @@ The current implementation already uses these interfaces:
    metrics, and update `docs/operations/run-and-observe.md` once merged.
 3. **Outbox worker** – Implement `worker/outbox.py` to dequeue envelopes, execute
    Composio actions with retries, and emit audit/telemetry events.
-4. **Multi-employee orchestrator** – Incrementally build `agents/coordinator.py` to
+4. **Multi-employee orchestrator** – Extend `agents/coordinator.py` to
    route work to specialised blueprints. Reference multi-agent patterns from
-   `libs_docs/adk/full_llm_docs.txt`.
+   `libs_docs/adk/full_llm_docs.txt` when layering additional surfaces beyond the desk.
 
 Update this file whenever a roadmap item lands. Each section should reflect the state of
 the repository on the merge date so reviewers can map changes back to architecture

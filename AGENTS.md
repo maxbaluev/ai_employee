@@ -57,8 +57,8 @@ FastAPI (ag_ui_adk)
 
 Agent Package (`agent/`)
  ├─ agents/
- │   ├─ control_plane.py       # live orchestration
- │   └─ coordinator.py         # multi-employee orchestration (roadmap)
+ │   ├─ control_plane.py       # desk orchestration
+ │   └─ coordinator.py         # shared multi-employee orchestration scaffold
  ├─ callbacks/
  │   ├─ before.py              # prompt & guardrail synthesis
  │   └─ after.py               # plan execution + summaries
@@ -88,7 +88,7 @@ Each phase references the authoritative items in `docs/todo.md`. Legend: ✅ don
 - Shared-state schemas published (`docs/schemas/*`, `docs/implementation/frontend-shared-state.md`).
 - Observability contracts defined (`docs/operations/run-and-observe.md`, `docs/references/observability.md`).
 
-### Phase 1 · Control Plane Modularisation 🔄
+### Phase 1 · Control Plane Modularisation ✅ (complete)
 
 **Goal** Harden callback + guardrail orchestration and service boundaries so the desk blueprint stays stable while we layer in multi-employee coordination.
 
@@ -96,10 +96,10 @@ Each phase references the authoritative items in `docs/todo.md`. Legend: ✅ don
 - Guardrail modules (`agent/guardrails/*.py`) are wired through `agent/callbacks/guardrails.py` and exercised in `tests/guardrails/`; each exposes a pure `check(...) -> GuardrailResult` consumed by `build_before_model_modifier` so refusals short-circuit safely.
 - Callback builders in `agent/callbacks/before.py` and `agent/callbacks/after.py` own prompt enrichment, shared-state seeding, envelope enqueueing, and deterministic use of `callback_context.end_invocation` as outlined in `docs/implementation/backend-callbacks.md`.
 - Service shims in `agent/services/catalog.py`, `agent/services/objectives.py`, `agent/services/outbox.py`, and `agent/services/audit.py` mirror the Supabase contracts documented in `docs/architecture/agent-control-plane.md`, keeping tests and local runs Supabase-free.
+- `agent/agents/coordinator.py` now composes shared services, callbacks, and blueprints so surface-specific factories (e.g. `control_plane.py`) stay thin while enabling multi-employee orchestration.
 
 **In Flight**
-- Replace the remaining Proverbs-era diagram with the modular blueprint now captured in `docs/architecture/agent-control-plane.md` so reviewers see the same component map referenced here and in `docs/todo.md`.
-- Scaffold `agent/agents/coordinator.py` to compose shared services and callbacks for multi-employee orchestration without duplicating desk-specific wiring; follow the “Target Package Layout” guidance before introducing Supabase persistence.
+- Prep Supabase-backed catalog/objectives handoff for Phase 2 while expanding coordinator coverage with integration tests.
 
 **Guardrails**
 - Adhere to the matrix in `docs/governance/security-and-guardrails.md`: log every guardrail decision via `StructlogAuditLogger`, reuse the refusal tone guide, and block runs by setting `callback_context.end_invocation = True`.

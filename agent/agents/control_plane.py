@@ -2,25 +2,22 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Mapping, Optional, Sequence
 
 try:  # pragma: no cover - fail fast when google-adk is missing
-    from ag_ui_adk import ADKAgent
-    from google.adk.agents import LlmAgent
     from google.adk.tools import ToolContext
 except ImportError as exc:  # pragma: no cover
     raise RuntimeError(
-        "google-adk and ag-ui-adk must be installed to build the control plane agent."
+        "google-adk must be installed to build the control plane agent."
     ) from exc
 
 import structlog
 
 from agent.agents.blueprints import DeskBlueprint
-from agent.callbacks import (
-    build_after_model_modifier,
-    build_before_model_modifier,
-    build_on_before_agent,
+from agent.agents.coordinator import (
+    AgentCoordinator,
+    CoordinatorDependencies,
+    SurfaceRegistration,
 )
 from agent.schemas.envelope import Envelope
 from agent.services import (
@@ -48,17 +45,11 @@ from agent.services import (
 
 logger = structlog.get_logger(__name__)
 
-
-@dataclass(slots=True)
-class ControlPlaneDependencies:
-    """Container for the services backing the control plane agent."""
-
-    settings: AppSettings
-    catalog_service: CatalogService
-    objectives_service: ObjectivesService
-    outbox_service: OutboxService
-    audit_logger: AuditLogger
-    blueprint: DeskBlueprint
+DESK_SURFACE_KEY = "desk"
+CONTROL_PLANE_INSTRUCTION = (
+    "You are the control plane agent coordinating tenants' SaaS actions via Composio.\n"
+    "Use the `enqueue_envelope` tool to stage actions for the Outbox worker."
+)
 
 
 def build_control_plane_agent(
@@ -72,7 +63,6 @@ def build_control_plane_agent(
     """Create an ADKAgent wired with Composio-aware callbacks and tools."""
 
     app_settings = settings or get_settings()
-
     dependencies = _resolve_dependencies(
         app_settings,
         catalog_service=catalog_service,
@@ -81,14 +71,18 @@ def build_control_plane_agent(
         audit_logger=audit_logger,
     )
 
-    agent = _build_agent(dependencies)
-    return ADKAgent(
-        adk_agent=agent,
-        app_name=app_settings.app_name,
-        user_id=app_settings.user_id,
-        session_timeout_seconds=3600,
-        use_in_memory_services=isinstance(dependencies.outbox_service, InMemoryOutboxService),
+    coordinator = AgentCoordinator(dependencies)
+    coordinator.register_surface(
+        SurfaceRegistration(
+            key=DESK_SURFACE_KEY,
+            name="ControlPlaneAgent",
+            blueprint_factory=DeskBlueprint,
+            tools_factory=_desk_tools_factory,
+            instruction=CONTROL_PLANE_INSTRUCTION,
+            model=app_settings.default_model,
+        )
     )
+    return coordinator.build_adk_agent(DESK_SURFACE_KEY)
 
 
 def _resolve_dependencies(
@@ -98,9 +92,7 @@ def _resolve_dependencies(
     objectives_service: ObjectivesService | None,
     outbox_service: OutboxService | None,
     audit_logger: AuditLogger | None,
-) -> ControlPlaneDependencies:
-    blueprint = DeskBlueprint()
-
+) -> CoordinatorDependencies:
     supabase_client = None
     if settings.supabase_enabled():
         try:
@@ -123,13 +115,12 @@ def _resolve_dependencies(
         )
         _sync_catalog_from_composio(settings, resolved_catalog)
 
-        return ControlPlaneDependencies(
+        return CoordinatorDependencies(
             settings=settings,
             catalog_service=resolved_catalog,
             objectives_service=resolved_objectives,
             outbox_service=resolved_outbox,
             audit_logger=resolved_audit,
-            blueprint=blueprint,
         )
 
     resolved_catalog = catalog_service or _resolve_in_memory_catalog(settings)
@@ -139,58 +130,29 @@ def _resolve_dependencies(
     resolved_outbox = outbox_service or InMemoryOutboxService()
     resolved_audit = audit_logger or StructlogAuditLogger()
 
-    return ControlPlaneDependencies(
+    return CoordinatorDependencies(
         settings=settings,
         catalog_service=resolved_catalog,
         objectives_service=resolved_objectives,
         outbox_service=resolved_outbox,
         audit_logger=resolved_audit,
-        blueprint=blueprint,
     )
 
 
-def _build_agent(dependencies: ControlPlaneDependencies) -> LlmAgent:
-    instruction = (
-        "You are the control plane agent coordinating tenants' SaaS actions via Composio.\n"
-        "Use the `enqueue_envelope` tool to stage actions for the Outbox worker."
-    )
-
-    tools = [
-        _build_enqueue_envelope_tool(dependencies),
-    ]
-
-    before_agent = build_on_before_agent(
-        blueprint=dependencies.blueprint,
-        objectives_service=dependencies.objectives_service,
-        outbox_service=dependencies.outbox_service,
-        settings=dependencies.settings,
-    )
-    before_model = build_before_model_modifier(
-        blueprint=dependencies.blueprint,
-        settings=dependencies.settings,
-        catalog_service=dependencies.catalog_service,
-        objectives_service=dependencies.objectives_service,
-        audit_logger=dependencies.audit_logger,
-        outbox_service=dependencies.outbox_service,
-    )
-    after_model = build_after_model_modifier(blueprint=dependencies.blueprint)
-
-    return LlmAgent(
-        name="ControlPlaneAgent",
-        model=dependencies.settings.default_model,
-        instruction=instruction,
-        tools=tools,
-        before_agent_callback=before_agent,
-        before_model_callback=before_model,
-        after_model_callback=after_model,
-    )
+def _desk_tools_factory(
+    dependencies: CoordinatorDependencies,
+    blueprint: DeskBlueprint,
+) -> Sequence[Any]:
+    return (_build_enqueue_envelope_tool(dependencies, blueprint),)
 
 
-def _build_enqueue_envelope_tool(dependencies: ControlPlaneDependencies):
+def _build_enqueue_envelope_tool(
+    dependencies: CoordinatorDependencies,
+    blueprint: DeskBlueprint,
+):
     catalog_service = dependencies.catalog_service
     outbox_service = dependencies.outbox_service
     audit_logger = dependencies.audit_logger
-    blueprint = dependencies.blueprint
     settings = dependencies.settings
 
     def enqueue_envelope(
@@ -326,3 +288,7 @@ def _build_demo_catalog_entries() -> Sequence[ToolCatalogEntry]:
             risk="low",
         ),
     )
+
+
+__all__ = ["build_control_plane_agent"]
+

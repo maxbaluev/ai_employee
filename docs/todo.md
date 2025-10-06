@@ -18,7 +18,7 @@ Plane, Composio, Approvals/UI, Data/Worker, Observability, Governance).
 
 ## 2. Architecture (Frontend · Agent · Composio · Data)
 
-- [ ] Replace the Proverbs agent diagram with the modular blueprint once packages exist. (`docs/architecture/agent-control-plane.md`, `AGENTS.md`)
+- [x] Replace the Proverbs agent diagram with the modular blueprint now that coordinator scaffolding ships. (`docs/architecture/agent-control-plane.md`, `AGENTS.md`)
 - [ ] Embed the Composio catalog → envelope → Outbox sequence diagram using
       `libs_docs/composio_next/python/providers/google_adk/google_adk_demo.py` as the source. (`docs/architecture/composio-execution.md`)
 - [ ] Add Supabase ERD and migration conventions. (`docs/architecture/data-roadmap.md`)
