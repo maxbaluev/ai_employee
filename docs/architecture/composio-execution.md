@@ -1,6 +1,6 @@
 # Composio Execution Layer
 
-**Status:** Implemented (Supabase catalog + Outbox worker) · In progress (connected account UX, telemetry)
+**Status:** Implemented (Supabase catalog sync + Outbox worker) · In progress (connected account UX, telemetry)
 
 ADR-0001 locks the platform to Composio as the only mechanism for executing actions on
 third-party SaaS apps. This document provides the contract for implementing that
@@ -8,7 +8,7 @@ integration end-to-end.
 
 ## Responsibilities
 
-1. **Catalog sync** – pull toolkits, schemas, scopes, and risk metadata per tenant.
+1. **Catalog sync** – pull toolkits, schemas, scopes, and risk metadata per tenant via `agent/services/catalog_sync.py`.
 2. **Connected account lifecycle** – initiate OAuth, poll for activation, disable, and
    re-authenticate accounts.
 3. **Execution path** – enqueue, execute, and audit calls to `composio.tools.execute`.
@@ -35,9 +35,9 @@ FastAPI Catalog Service (Supabase-backed)
  └─ POST /connected-accounts/:id/enable|disable (planned)
 
 Supabase Cron (recurring jobs)
- └─ Nightly job: composio.tools.get(...) → persist JSON schema + scopes in Supabase
-    Configure via `cron.schedule()` to invoke an Edge Function that runs the catalog sync
-    (pattern documented in `libs_docs/supabase/llms_docs.txt`).
+ └─ Nightly job: invoke the catalog sync Edge Function which runs
+    `uv run python -m agent.services.catalog_sync` to persist JSON schema + scopes.
+    Configure via `cron.schedule()` (pattern documented in `libs_docs/supabase/llms_docs.txt`).
     All recurring jobs managed via Supabase dashboard (Integrations → Cron) or SQL.
     Track cron definitions in `docs/operations/run-and-observe.md`.
 
@@ -189,3 +189,12 @@ Ensure callback and UI code stay aligned with this contract so approvals can be
 rendered without bespoke React components.
 
 Document progress by updating the status header above as you land each milestone.
+### Catalog Sync Job
+
+- **Entrypoint:** `uv run python -m agent.services.catalog_sync`
+- **Dependencies:** Supabase credentials (`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`) and Composio credentials
+  (`COMPOSIO_API_KEY`, optional OAuth client/secret, redirect URL).
+- **Behaviour:** Fetches live Composio catalog entries per tenant, clears cached results, and upserts
+  rows into `tool_catalog` via `SupabaseCatalogService.sync_entries`.
+- **Telemetry:** Logs `synced` counts and completion duration via `structlog`. Surface metrics by
+  incrementing `cron_job_runs_total{job_name="catalog-sync-nightly"}` in the invoking Edge Function.

@@ -15,8 +15,9 @@ from agent.services import (
 )
 
 
-def _build_dependencies() -> tuple[CoordinatorDependencies, DeskBlueprint]:
-    settings = AppSettings()
+def _build_dependencies(**settings_overrides) -> tuple[CoordinatorDependencies, DeskBlueprint]:
+    base_settings = AppSettings()
+    settings = base_settings.model_copy(update=settings_overrides) if settings_overrides else base_settings
     blueprint = DeskBlueprint()
     catalog = InMemoryCatalogService(
         entries_by_tenant={
@@ -76,3 +77,20 @@ def test_enqueue_envelope_tool_enqueues_record() -> None:
     assert len(pending) == 1
     assert pending[0].envelope.tool_slug == "GMAIL__drafts.create"
     assert tool_context.state.get("outbox", {}).get("last_envelope_id") == pending[0].envelope.envelope_id
+
+
+def test_enqueue_envelope_includes_default_scopes() -> None:
+    deps, blueprint = _build_dependencies(default_scopes=("GLOBAL_SCOPE",))
+    enqueue_tool = _build_enqueue_envelope_tool(deps, blueprint)
+
+    tool_context = SimpleNamespace(state={})
+    payload = {
+        "tool_slug": "GMAIL__drafts.create",
+        "arguments": {"to": "customer@example.com", "subject": "Renewal"},
+    }
+    enqueue_tool(tool_context, payload)
+
+    modal = tool_context.state.get("approvalModal", {})
+    required_scopes = modal.get("requiredScopes") if isinstance(modal, dict) else None
+    assert required_scopes is not None
+    assert "GLOBAL_SCOPE" in required_scopes

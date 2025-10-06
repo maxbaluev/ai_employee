@@ -95,7 +95,7 @@ ensures schedules survive agent restarts and scale independently.
 
 | Job Name | Schedule | Purpose | Edge Function |
 |----------|----------|---------|---------------|
-| `catalog-sync-nightly` | Daily at 2 AM | Sync Composio tool catalog | `/functions/v1/catalog-sync` |
+| `catalog-sync-nightly` | Daily at 2 AM | Sync Composio tool catalog (`uv run python -m agent.services.catalog_sync`) | `/functions/v1/catalog-sync` |
 | `trickle-refresh-hourly` | Every hour | Refresh toolkit signals | `/functions/v1/trickle-refresh` |
 | `embedding-reindex-nightly` | Daily at 3 AM | Recalculate embeddings | `/functions/v1/embedding-reindex` |
 

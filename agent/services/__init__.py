@@ -8,6 +8,7 @@ from .catalog import (
     SupabaseCatalogService,
     ToolCatalogEntry,
 )
+from .catalog_sync import CatalogSyncError, sync_catalog
 from .objectives import (
     DEFAULT_OBJECTIVES,
     InMemoryObjectivesService,
@@ -49,6 +50,8 @@ __all__ = [
     "InMemoryCatalogService",
     "SupabaseCatalogService",
     "ToolCatalogEntry",
+    "sync_catalog",
+    "CatalogSyncError",
     "ObjectivesService",
     "InMemoryObjectivesService",
     "SupabaseObjectivesService",

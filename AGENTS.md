@@ -45,6 +45,7 @@ guardrails move together.
 - `agent/app.py` exposes FastAPI via `ag_ui_adk.add_adk_fastapi_endpoint` for AGUI streams → CopilotKit (`src/app/api/copilotkit/route.ts`).
 - `agent/agents/control_plane.py` composes `google.adk.agents.LlmAgent`, desk blueprint, guardrails, Supabase-backed services, and Composio tooling (dependency injection keeps in-memory doubles viable).
 - `agent/services/settings.py` (pydantic-settings) feeds guardrails, Composio, and Supabase configs with env parity across environments.
+- `agent/services/catalog_sync.py` runs the Composio → Supabase catalog sync (Supabase Cron entrypoint).
 - In-memory fallbacks exist for catalog/objectives/outbox; Supabase implementations land in Phases 2 and 4.
 - Worker skeleton (`worker/outbox.py`) and shared JSON schemas (`docs/schemas/*`) are committed.
 
@@ -111,12 +112,12 @@ Each phase references the authoritative items in `docs/todo.md`. Legend: ✅ don
 - `docs/governance/security-and-guardrails.md`
 - `docs/todo.md`
 
-### Phase 2 · Composio Integration & Catalog 📋
+### Phase 2 · Composio Integration & Catalog ✅ (complete)
 Goals: persist the tool catalog, manage OAuth, execute envelopes.
-- [ ] Supabase-backed `CatalogService` replacing the shim (`agent/services/catalog.py`).
-- [ ] Embed catalog → envelope → Outbox sequence diagram (`docs/architecture/composio-execution.md`).
-- [ ] Wire Composio OAuth env vars + scope handling (`agent/services/settings.py`, `docs/implementation/composio-tooling.md`).
-- [ ] Schedule nightly catalog sync with telemetry (Supabase Cron + Edge Functions + Tenacity for retries).
+- [x] Supabase-backed `CatalogService` replacing the shim (`agent/services/catalog.py`) with a reusable sync job (`agent/services/catalog_sync.py`).
+- [x] Embed catalog → envelope → Outbox sequence diagram (`docs/architecture/composio-execution.md`).
+- [x] Wire Composio OAuth env vars + scope handling (`agent/services/settings.py`, `docs/implementation/composio-tooling.md`).
+- [x] Schedule nightly catalog sync with telemetry (Supabase Cron + Edge Functions + Tenacity for retries) documented in `docs/operations/run-and-observe.md`.
 Depends on Phase 1 service boundaries.
 
 ### Phase 3 · Approvals & Frontend State 📋

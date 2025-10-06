@@ -19,7 +19,7 @@ Plane, Composio, Approvals/UI, Data/Worker, Observability, Governance).
 ## 2. Architecture (Frontend · Agent · Composio · Data)
 
 - [x] Replace the Proverbs agent diagram with the modular blueprint now that coordinator scaffolding ships. (`docs/architecture/agent-control-plane.md`, `AGENTS.md`)
-- [ ] Embed the Composio catalog → envelope → Outbox sequence diagram using
+- [x] Embed the Composio catalog → envelope → Outbox sequence diagram using
       `libs_docs/composio_next/python/providers/google_adk/google_adk_demo.py` as the source. (`docs/architecture/composio-execution.md`)
 - [ ] Add Supabase ERD and migration conventions. (`docs/architecture/data-roadmap.md`)
 - [ ] Update frontend architecture to include planned Desk/Approvals route layout and
@@ -52,7 +52,7 @@ Plane, Composio, Approvals/UI, Data/Worker, Observability, Governance).
 - [x] Record dashboard placeholders and PromQL queries until real screenshots exist. (`docs/references/observability.md`)
 - [x] Document Supabase Cron scheduling approach across architecture and operations docs; replace all APScheduler references. (`docs/architecture/data-roadmap.md`, `docs/architecture/composio-execution.md`, `docs/operations/run-and-observe.md`, `AGENTS.md`)
 - [x] Expand incident runbooks with real postmortems and comms templates. (`docs/operations/runbooks/`, `docs/operations/runbooks/postmortems/outbox-dlq-2025-09-18.md`)
-- [ ] Wire Composio OAuth env vars once backend settings are ready. (`docs/implementation/composio-tooling.md`, `agent/services/settings.py`)
+- [x] Wire Composio OAuth env vars once backend settings are ready. (`docs/implementation/composio-tooling.md`, `agent/services/settings.py`)
 
 ## 7. Governance & Documentation
 
@@ -64,7 +64,7 @@ Plane, Composio, Approvals/UI, Data/Worker, Observability, Governance).
 ### Next Up
 
 1. Document schema-driven approval forms once Composio catalog persistence lands. (`docs/implementation/ui-surfaces.md`, `docs/architecture/composio-execution.md`)
-2. Wire Composio OAuth environment variables after settings contract finalised. (`docs/implementation/composio-tooling.md`, `agent/services/settings.py`)
+2. Add Supabase ERD and migration conventions. (`docs/architecture/data-roadmap.md`)
 
 Update this tracker as milestones land. Remove completed items only when the associated
 code, documentation, and tests are merged.

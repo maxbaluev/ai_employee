@@ -57,6 +57,9 @@ echo "COMPOSIO_API_KEY=..." >> .env
 echo "COMPOSIO_CLIENT_ID=..." >> .env
 echo "COMPOSIO_CLIENT_SECRET=..." >> .env
 echo "COMPOSIO_REDIRECT_URL=http://localhost:8000/api/composio/callback" >> .env
+# Optional: restrict catalog discovery and baseline scopes per tenant
+echo "COMPOSIO_DEFAULT_TOOLKITS=GITHUB,SLACK" >> .env
+echo "COMPOSIO_DEFAULT_SCOPES=SLACK.CHAT:WRITE" >> .env
 echo "SUPABASE_URL=..." >> .env
 echo "SUPABASE_ANON_KEY=..." >> .env
 echo "SUPABASE_SERVICE_KEY=..." >> .env

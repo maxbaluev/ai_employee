@@ -1,7 +1,6 @@
 # Composio Tooling Integration Guide
 
-**Status:** Implemented (control plane + Supabase-backed worker) · In progress (OAuth UX &
-advanced catalog sync)
+**Status:** Implemented (control plane + Supabase catalog sync + Supabase-backed worker) · In progress (OAuth UX)
 
 This guide documents how the Python control plane wires Composio today and what is still
 outstanding. It draws on the vendor examples vendored under `libs_docs/` so you can map
@@ -34,12 +33,15 @@ def build_composio(settings: AppSettings) -> Composio:
   `SupabaseCatalogService` for persistence. When Supabase credentials are present, the
   control plane hydrates the remote catalog and upserts rows via
   `catalog_service.sync_entries()` before serving traffic.
+- `agent/services/catalog_sync.py` provides the reusable sync job (`uv run python -m
+  agent.services.catalog_sync`) used by Supabase Cron or manual operators. It clears the
+  cached Composio responses, retries transient failures, and bulk-upserts rows into Supabase.
 - Schema and scope metadata flow into the Desk shared state so the frontend can render
   schema-driven approval forms. See `DeskBlueprint.register_envelope()` for how the queue
   absorbs those entries.
-- Supabase Cron jobs (documented in `docs/operations/run-and-observe.md`) should trigger
-  nightly syncs using the SQL patterns from `libs_docs/supabase/llms_docs.txt`
-  (`cron.schedule`, `net.http_post`).
+- Supabase Cron jobs (documented in `docs/operations/run-and-observe.md`) trigger nightly
+  catalog syncs by invoking an Edge Function that runs the Python entrypoint above using
+  the SQL patterns from `libs_docs/supabase/llms_docs.txt` (`cron.schedule`, `net.http_post`).
 
 ## 3. Connected Accounts & OAuth (In Progress)
 
@@ -47,7 +49,8 @@ def build_composio(settings: AppSettings) -> Composio:
   `composio.accounts.create_connection_link(...)`. Emit the link through shared state so
   the UI can open it, capture the state token, and handle the callback with
   `accounts.exchange_code`.
-- Persist the resulting `connected_account_id`, granted scopes, and metadata in Supabase
+- Persist the resulting `connected_account_id`, granted scopes (merged with
+  `COMPOSIO_DEFAULT_SCOPES`), and metadata in Supabase
   (`connected_accounts` table) and emit audit logs via `StructlogAuditLogger` or
   `SupabaseAuditLogger`.
 - The UI surfaces (`docs/implementation/ui-surfaces.md`) will reference this data when
@@ -63,7 +66,9 @@ def build_composio(settings: AppSettings) -> Composio:
   The refusal copy templates in `libs_docs/adk/full_llm_docs.txt` keep the user-facing
   tone consistent.
 - Store scope grants per `connected_account_id` in Supabase so both the agent and worker
-  can validate permissions without round-trips to Composio.
+  can validate permissions without round-trips to Composio. Configure tenant-wide
+  defaults via `COMPOSIO_DEFAULT_SCOPES`; the control plane appends them to tool-specific
+  scopes when emitting approval proposals.
 
 ## 5. ADK Tooling & Enqueue Flow
 
@@ -101,4 +106,4 @@ def build_composio(settings: AppSettings) -> Composio:
   correctly.
 
 Keep this guide current: reference upstream docs when SDK behaviour changes and update
-status once OAuth surfaces and advanced catalog sync are live.
+status once the OAuth surfaces land.

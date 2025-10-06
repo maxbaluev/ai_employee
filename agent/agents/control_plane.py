@@ -188,7 +188,10 @@ def _build_enqueue_envelope_tool(
                 status=record.status,
             )
 
-            scopes = list(required_scopes or catalog_entry.required_scopes)
+            scopes: list[str] = list(required_scopes or catalog_entry.required_scopes)
+            for default_scope in settings.composio_default_scopes:
+                if default_scope not in scopes:
+                    scopes.append(default_scope)
             blueprint.register_envelope(
                 tool_context.state,
                 record=record,
@@ -291,4 +294,3 @@ def _build_demo_catalog_entries() -> Sequence[ToolCatalogEntry]:
 
 
 __all__ = ["build_control_plane_agent"]
-

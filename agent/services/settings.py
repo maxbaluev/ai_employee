@@ -6,6 +6,7 @@ from functools import lru_cache
 from typing import Optional
 
 from pydantic import AliasChoices, Field
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,7 +17,22 @@ class AppSettings(BaseSettings):
     user_id: str = "demo_user"
     tenant_id: str = "tenant-demo"
     default_model: str = "gemini-2.5-flash"
-    default_toolkits: tuple[str, ...] = ("GITHUB",)
+    default_toolkits: tuple[str, ...] = Field(
+        default=("GITHUB",),
+        validation_alias=AliasChoices(
+            "composio_default_toolkits",
+            "AI_EMPLOYEE_COMPOSIO_DEFAULT_TOOLKITS",
+            "COMPOSIO_DEFAULT_TOOLKITS",
+        ),
+    )
+    default_scopes: tuple[str, ...] = Field(
+        default=(),
+        validation_alias=AliasChoices(
+            "composio_default_scopes",
+            "AI_EMPLOYEE_COMPOSIO_DEFAULT_SCOPES",
+            "COMPOSIO_DEFAULT_SCOPES",
+        ),
+    )
 
     api_host: str = "0.0.0.0"
     api_port: int = 8000
@@ -89,6 +105,22 @@ class AppSettings(BaseSettings):
     outbox_poll_interval_seconds: int = 5
     outbox_batch_size: int = 5
     outbox_max_attempts: int = 3
+
+    @field_validator("default_toolkits", "default_scopes", mode="before")
+    @classmethod
+    def _parse_csv_tuple(cls, value):
+        if value is None or value == "":
+            return ()
+        if isinstance(value, str):
+            items = [part.strip() for part in value.split(",") if part.strip()]
+            return tuple(items)
+        if isinstance(value, (list, tuple, set)):
+            return tuple(str(item).strip() for item in value if str(item).strip())
+        return value
+
+    @property
+    def composio_default_scopes(self) -> tuple[str, ...]:
+        return self.default_scopes
 
     def supabase_enabled(self) -> bool:
         """Return `True` when Supabase credentials are configured."""
