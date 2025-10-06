@@ -5,13 +5,15 @@
 create extension if not exists pgcrypto;
 
 -- Helper to extract the tenant_id claim from authenticated requests.
-create or replace function public.current_tenant_id() returns uuid as $$
-    select nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'tenant_id'
+create or replace function public.current_tenant_id_uuid() returns uuid as $$
+    select nullif(
+        nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'tenant_id',
+        ''
+    )::uuid
 $$ language sql stable;
 
-create or replace function public.current_tenant_id_uuid() returns uuid as $$
-    select nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'tenant_id'
-        ::uuid
+create or replace function public.current_tenant_id() returns uuid as $$
+    select public.current_tenant_id_uuid()
 $$ language sql stable;
 
 create or replace function public.set_updated_at() returns trigger as $$
@@ -409,6 +411,22 @@ from outbox
 where status in ('sent','failed','conflict','skipped','success')
 order by updated_at desc;
 
+-- Policy overrides per tool
+create table if not exists tool_policies (
+    tenant_id uuid not null references tenants(id) on delete cascade,
+    composio_app text not null,
+    tool_key text not null,
+    risk text,
+    approval text,
+    write_allowed boolean,
+    rate_bucket text,
+    updated_at timestamptz not null default now(),
+    primary key (tenant_id, composio_app, tool_key)
+);
+alter table tool_policies enable row level security;
+create policy tool_policies_service_role on tool_policies for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
+create policy tool_policies_select_own on tool_policies for select using (auth.role() = 'service_role' or tenant_id = current_tenant_id_uuid());
+
 create or replace view public.catalog_tools_view as
 select 
   tc.tenant_id,
@@ -427,19 +445,3 @@ from tool_catalog tc
 left join tool_policies tp
   on tp.tenant_id = tc.tenant_id
   and (tc.tool_slug = (tp.composio_app || '.' || tp.tool_key));
-
--- Policy overrides per tool
-create table if not exists tool_policies (
-    tenant_id uuid not null references tenants(id) on delete cascade,
-    composio_app text not null,
-    tool_key text not null,
-    risk text,
-    approval text,
-    write_allowed boolean,
-    rate_bucket text,
-    updated_at timestamptz not null default now(),
-    primary key (tenant_id, composio_app, tool_key)
-);
-alter table tool_policies enable row level security;
-create policy tool_policies_service_role on tool_policies for all using (auth.role() = 'service_role') with check (auth.role() = 'service_role');
-create policy tool_policies_select_own on tool_policies for select using (auth.role() = 'service_role' or tenant_id = current_tenant_id_uuid());

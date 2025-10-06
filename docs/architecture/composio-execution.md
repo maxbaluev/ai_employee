@@ -1,6 +1,6 @@
 # Composio Execution Layer
 
-**Status:** Implemented (Supabase catalog sync + Outbox worker) · In progress (connected account UX, JIT flows, telemetry)
+**Status:** Implemented (Supabase catalog sync + Outbox worker) · In progress (JIT flows, optional custom OAuth branding, telemetry)
 
 ADR-0001 locks the platform to Composio as the only mechanism for executing actions on
 third-party SaaS apps. This document provides the contract for implementing that
@@ -8,9 +8,11 @@ integration end-to-end.
 
 ## Responsibilities
 
-1. **Catalog sync** – pull toolkits, schemas, scopes, and risk metadata per tenant via `agent/services/catalog_sync.py`.
-2. **Connected account lifecycle** – initiate OAuth, poll for activation, disable, and
-   re-authenticate accounts.
+1. **Catalog sync** – pull all available MCP tools (or a restricted set if
+   `COMPOSIO_DEFAULT_TOOLKITS` is set), including schemas, scopes, and risk metadata per tenant.
+2. **Connected account lifecycle** – initiate Composio’s hosted connect flow (API‑key‑only),
+   poll for activation, disable, and re‑authenticate accounts. Custom OAuth branding via a
+   bespoke redirect URL is optional, not required.
 3. **Execution path** – enqueue, execute, and audit calls to `composio.tools.execute` (Outbox is the only executor).
 4. **Observability** – capture telemetry (latency, success/failure, provider conflicts).
 
@@ -39,7 +41,7 @@ When an approved action lacks access, open a JIT modal:
   requesting tools and running them inside an ADK agent via `GoogleAdkProvider` (mirrors
   the control plane wiring in `agent/agents/control_plane.py`).
 - `libs_docs/composio_next/python/README.md` – SDK setup instructions, scopes glossary,
-  and OAuth flow expectations.
+  and hosted OAuth flow expectations.
 - `libs_docs/adk/full_llm_docs.txt` – callback and guardrail composition patterns used by
   the control plane to short-circuit unsafe runs (`ctx.end_invocation = True`).
 - `libs_docs/supabase/llms_docs.txt` – Supabase Cron + Edge Function patterns for
@@ -213,7 +215,8 @@ Document progress by updating the status header above as you land each milestone
 
 - **Entrypoint:** `uv run python -m agent.services.catalog_sync`
 - **Dependencies:** Supabase credentials (`SUPABASE_URL`, `SUPABASE_SERVICE_KEY`) and Composio credentials
-  (`COMPOSIO_API_KEY`, optional OAuth client/secret, redirect URL).
+  (`COMPOSIO_API_KEY`). OAuth client/secret/redirect are optional and only needed if you
+  want to own the redirect domain.
 - **Behaviour:** Fetches live Composio catalog entries per tenant, clears cached results, and upserts
   rows into `tool_catalog` via `SupabaseCatalogService.sync_entries`.
 - **Telemetry:** Logs `synced` counts and completion duration via `structlog`. Surface metrics by

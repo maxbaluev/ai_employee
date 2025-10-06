@@ -1,6 +1,6 @@
 # Composio Tooling Integration Guide
 
-**Status:** Implemented (control plane + Supabase catalog sync + Supabase-backed worker) · In progress (OAuth UX)
+**Status:** Implemented (control plane + Supabase catalog sync + Supabase-backed worker) · In progress (optional custom OAuth branding)
 
 This guide documents how the Python control plane wires Composio today and what is still
 outstanding. It draws on the vendor examples vendored under `libs_docs/` so you can map
@@ -9,8 +9,8 @@ behaviour back to upstream SDK guidance.
 ## 1. Bootstrap the Client
 
 - Runtime settings live in `agent/services/settings.py` (`AppSettings`). The control
-  plane reads `COMPOSIO_API_KEY`, optional OAuth credentials, and default toolkits from
-  those settings.
+  plane reads `COMPOSIO_API_KEY` (required) and optional defaults (toolkits/scopes).
+  You do NOT need `COMPOSIO_CLIENT_ID/SECRET/REDIRECT_URL` for default hosted auth.
 - A Composio client is instantiated via `Composio(provider=GoogleAdkProvider(), api_key=…)`.
   See `_resolve_in_memory_catalog` and `_sync_catalog_from_composio` inside
   `agent/agents/control_plane.py` for the canonical pattern.
@@ -43,16 +43,13 @@ def build_composio(settings: AppSettings) -> Composio:
   catalog syncs by invoking an Edge Function that runs the Python entrypoint above using
   the SQL patterns from `libs_docs/supabase/llms_docs.txt` (`cron.schedule`, `net.http_post`).
 
-## 3. Connected Accounts & OAuth (In Progress)
+## 3. Connected Accounts & OAuth (Host‑managed by default)
 
-- Composio’s hosted connection URLs come from
-  `composio.accounts.create_connection_link(...)`. Emit the link through shared state so
-  the UI can open it, capture the state token, and handle the callback with
-  `accounts.exchange_code`.
-- Persist the resulting `connected_account_id`, granted scopes (merged with
-  `COMPOSIO_DEFAULT_SCOPES`), and metadata in Supabase
-  (`connected_accounts` table) and emit audit logs via `StructlogAuditLogger` or
-  `SupabaseAuditLogger`.
+- With only `COMPOSIO_API_KEY`, initiate Composio’s hosted connect flow to handle OAuth
+  for tools that require authentication. The SDK returns a redirect URL to Composio’s
+  consent screen; no client ID/secret is required.
+- Persist the resulting `connected_account_id`, granted scopes (merge with
+  `COMPOSIO_DEFAULT_SCOPES` if configured), and metadata in Supabase (planned table).
 - The UI surfaces (`docs/implementation/ui-surfaces.md`) will reference this data when
   rendering approval flows. Until then, keep the API + worker insulated from missing
   accounts by short-circuiting envelopes when a required account is absent.
@@ -66,9 +63,8 @@ def build_composio(settings: AppSettings) -> Composio:
   The refusal copy templates in `libs_docs/adk/full_llm_docs.txt` keep the user-facing
   tone consistent.
 - Store scope grants per `connected_account_id` in Supabase so both the agent and worker
-  can validate permissions without round-trips to Composio. Configure tenant-wide
-  defaults via `COMPOSIO_DEFAULT_SCOPES`; the control plane appends them to tool-specific
-  scopes when emitting approval proposals.
+  can validate permissions. Configure tenant-wide defaults via `COMPOSIO_DEFAULT_SCOPES`;
+  the control plane appends them to tool-specific scopes when emitting proposals.
 
 ## 5. ADK Tooling & Enqueue Flow
 

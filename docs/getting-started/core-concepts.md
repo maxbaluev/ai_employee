@@ -52,6 +52,9 @@ Signals, Evidence Card, Proposed Action, Action Envelope, Outbox, Trust Score.
 - `agent/services/outbox.py` and `worker/outbox.py` provide a Supabase-backed queue,
   Tenacity-powered retries, and DLQ management. The worker hydrates a Composio client via
   `GoogleAdkProvider` (see `libs_docs/composio_next/python/providers/google_adk/`).
+  When `COMPOSIO_DEFAULT_TOOLKITS` is left empty, the catalog discovery includes ALL
+  available MCP toolkits from Composio by default; set it only to intentionally
+  restrict discovery.
 - Allowed Tools & policy are stored per tool (risk_default, approval_default,
   write_allowed, rate_bucket). JIT connect/scope upgrades unblock approved actions with
   minimal scopes and auto-execute once granted.

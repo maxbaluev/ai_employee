@@ -1,6 +1,6 @@
 # Getting Started & Local Development
 
-**Status:** Implemented (Next.js UI + FastAPI ADK + Supabase schema + Outbox worker) · In progress (OAuth UX)
+**Status:** Implemented (Next.js UI + FastAPI ADK + Supabase schema + Outbox worker) · In progress (optional custom OAuth branding)
 
 Follow this guide to stand up a local environment that mirrors the documented
 infrastructure (mise + uv + pnpm).
@@ -45,20 +45,22 @@ If the environment becomes corrupted, run `uv venv --upgrade` followed by
 ## 3. Configure Environment Variables
 
 Copy the example env file and populate the required secrets. `GOOGLE_API_KEY` powers the
-demo agent today; the Composio variables enable OAuth flows once real toolkits go live.
-Supabase remains optional until persistence lands.
+demo agent today. For Composio MCP, only `COMPOSIO_API_KEY` is required — all non‑auth
+tools work out of the box, and tools that require authentication can use Composio’s
+hosted connect flow automatically. Supabase is optional for UI‑only demos; it is
+required for the Outbox worker and analytics endpoints.
 
 ```bash
 cp .env.example .env
 
 echo "GOOGLE_API_KEY=..." >> .env
 echo "COMPOSIO_API_KEY=..." >> .env
-echo "COMPOSIO_CLIENT_ID=..." >> .env
-echo "COMPOSIO_CLIENT_SECRET=..." >> .env
-echo "COMPOSIO_REDIRECT_URL=http://localhost:8000/api/composio/callback" >> .env
-# Optional: restrict catalog discovery and baseline scopes per tenant
-echo "COMPOSIO_DEFAULT_TOOLKITS=GITHUB,SLACK" >> .env
-echo "COMPOSIO_DEFAULT_SCOPES=SLACK.CHAT:WRITE" >> .env
+# Optional: restrict catalog discovery and baseline scopes per tenant.
+# Leave COMPOSIO_DEFAULT_TOOLKITS empty to fetch ALL available toolkits via MCP.
+# Set it only if you want to limit discovery, e.g.: GITHUB,SLACK
+# echo "COMPOSIO_DEFAULT_TOOLKITS=GITHUB,SLACK" >> .env
+# COMPOSIO_DEFAULT_SCOPES are tenant‑wide baseline scopes appended to proposals (optional)
+# echo "COMPOSIO_DEFAULT_SCOPES=SLACK.CHAT:WRITE" >> .env
 echo "SUPABASE_URL=..." >> .env
 echo "SUPABASE_ANON_KEY=..." >> .env
 echo "SUPABASE_SERVICE_KEY=..." >> .env
@@ -68,7 +70,17 @@ The Python process reads `.env` via `python-dotenv`. Keep UI-only overrides in
 `.env.local` if needed. If you want to pre-configure Supabase before persistence
 goes live, follow the credential bootstrap steps below.
 
-### 3.1 Supabase Credential Bootstrap {#supabase-credential-bootstrap}
+### 3.1 Composio Auth Flow (no client ID/secret required)
+
+- For tools that require OAuth, Composio provides a hosted connect experience and
+  redirect handling. With only `COMPOSIO_API_KEY`, your app can initiate a connection
+  and receive a redirect URL to Composio’s consent screen. You do not need
+  `COMPOSIO_CLIENT_ID`, `COMPOSIO_CLIENT_SECRET`, or a custom `COMPOSIO_REDIRECT_URL`
+  unless you want to brand the redirect domain (advanced/optional).
+- A custom redirect can be added later using the “custom domain redirect” pattern
+  vendored in `libs_docs/composio_next/fern/pages/src/authentication/custom-auth-configs.mdx`.
+
+### 3.2 Supabase Credential Bootstrap {#supabase-credential-bootstrap}
 
 **Prerequisites:** Access to a Supabase project you can administer and the Supabase CLI
 (`supabase >= 1.168`). Install the CLI via Homebrew, npm, or the

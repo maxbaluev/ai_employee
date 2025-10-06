@@ -150,5 +150,8 @@ Update this table whenever new jobs are added.
 2. Use `curl -N http://localhost:8000/` to stream raw AGUI events.
 3. If the UI cannot connect to the agent, ensure `NEXT_PUBLIC_COPILOTKIT_URL` (default is
    `/api/copilotkit`) points to a reachable endpoint.
+4. If the catalog is empty, verify `COMPOSIO_API_KEY` is set. To discover all toolkits,
+   leave `COMPOSIO_DEFAULT_TOOLKITS` unset or empty (set it only when you want to
+   restrict discovery to a subset such as `GITHUB,SLACK`).
 
 Expand this document with concrete command snippets once observability wiring lands.

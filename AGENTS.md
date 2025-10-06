@@ -12,7 +12,7 @@ For product docs and architecture, start with:
 - Install toolchain and deps
   - `mise install` (Node 22, Python 3.13)
   - `pnpm install` (runs `uv sync --extra test`)
-- Configure env: `cp .env.example .env` then fill keys (at minimum `GOOGLE_API_KEY`; add Supabase to run the worker/analytics)
+- Configure env: `cp .env.example .env` then fill keys (at minimum `GOOGLE_API_KEY` and `COMPOSIO_API_KEY`; add Supabase to run the worker/analytics)
 - Start dev: `pnpm dev` (Next.js UI + FastAPI agent)
 
 ## Run & Operate
@@ -81,9 +81,10 @@ For product docs and architecture, start with:
 
 ## Environment Keys (excerpt)
 - `GOOGLE_API_KEY` – model access for ADK agent
-- `COMPOSIO_API_KEY` (+ optional `COMPOSIO_CLIENT_ID/SECRET/REDIRECT_URL`)
-- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY` (required for worker/analytics)
-- `COMPOSIO_DEFAULT_TOOLKITS`, `COMPOSIO_DEFAULT_SCOPES` (optional defaults)
+- `COMPOSIO_API_KEY` – required; enables all Composio MCP tools. No other Composio env vars are needed for default (hosted) auth.
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY` – required for worker/analytics (optional for UI‑only demos)
+- `COMPOSIO_DEFAULT_TOOLKITS` – optional; leave empty to fetch ALL toolkits via MCP (set to restrict, e.g., `GITHUB,SLACK`).
+- `COMPOSIO_DEFAULT_SCOPES` – optional; tenant‑wide baseline scopes appended to proposals.
 
 ## PR Guidelines (for agents)
 - Keep changes surgical and aligned with the structure above
@@ -93,7 +94,8 @@ For product docs and architecture, start with:
 ## Troubleshooting
 - UI connected but no state: verify `NEXT_PUBLIC_COPILOTKIT_URL=/api/copilotkit` and that
   the agent is serving on port 8000
-- Empty catalog: run the catalog sync job or ensure `COMPOSIO_API_KEY` is set
+- Empty catalog: ensure `COMPOSIO_API_KEY` is set. If you intentionally restricted
+  discovery, set `COMPOSIO_DEFAULT_TOOLKITS` accordingly or leave it blank to load all.
 - Worker idle: verify Supabase keys and that `outbox` has `status='pending'` rows
 
 For deeper context, start with `docs/prd/universal-ai-employee-prd.md`,

@@ -8,6 +8,10 @@ from typing import Optional
 from pydantic import AliasChoices, Field
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings.sources import DotEnvSettingsSource, EnvSettingsSource
+
+
+CSV_FIELDS = {"default_toolkits", "default_scopes"}
 
 
 class AppSettings(BaseSettings):
@@ -18,7 +22,7 @@ class AppSettings(BaseSettings):
     tenant_id: str = "tenant-demo"
     default_model: str = "gemini-2.5-flash"
     default_toolkits: tuple[str, ...] = Field(
-        default=("GITHUB",),
+        default=(),
         validation_alias=AliasChoices(
             "composio_default_toolkits",
             "AI_EMPLOYEE_COMPOSIO_DEFAULT_TOOLKITS",
@@ -133,6 +137,58 @@ class AppSettings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings,
+        env_settings,
+        dotenv_settings,
+        file_secret_settings,
+    ):
+        config = settings_cls.model_config
+
+        class LenientEnvSource(EnvSettingsSource):
+            def decode_complex_value(self, field_name, field, value):
+                if field_name in CSV_FIELDS:
+                    return value
+                return super().decode_complex_value(field_name, field, value)
+
+        class LenientDotEnvSource(DotEnvSettingsSource):
+            def decode_complex_value(self, field_name, field, value):
+                if field_name in CSV_FIELDS:
+                    return value
+                return super().decode_complex_value(field_name, field, value)
+
+        env_source = LenientEnvSource(
+            settings_cls,
+            case_sensitive=config.get("case_sensitive"),
+            env_prefix=config.get("env_prefix"),
+            env_nested_delimiter=config.get("env_nested_delimiter"),
+            env_nested_max_split=config.get("env_nested_max_split"),
+            env_ignore_empty=config.get("env_ignore_empty"),
+            env_parse_none_str=config.get("env_parse_none_str"),
+            env_parse_enums=config.get("env_parse_enums"),
+        )
+
+        dotenv_source = LenientDotEnvSource(
+            settings_cls,
+            env_file=config.get("env_file"),
+            env_file_encoding=config.get("env_file_encoding"),
+            case_sensitive=config.get("case_sensitive"),
+            env_prefix=config.get("env_prefix"),
+            env_nested_delimiter=config.get("env_nested_delimiter"),
+            env_nested_max_split=config.get("env_nested_max_split"),
+            env_ignore_empty=config.get("env_ignore_empty"),
+            env_parse_none_str=config.get("env_parse_none_str"),
+            env_parse_enums=config.get("env_parse_enums"),
+        )
+
+        sources = [init_settings, env_source, dotenv_source]
+        if file_secret_settings is not None:
+            sources.append(file_secret_settings)
+        return tuple(sources)
 
 
 def get_settings(**overrides: object) -> AppSettings:
