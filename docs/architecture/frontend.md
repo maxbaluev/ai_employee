@@ -1,6 +1,6 @@
 # Frontend Architecture (Next.js + CopilotKit)
 
-**Status:** Implemented (demo page + runtime bridge) · In progress (product surfaces)
+**Status:** Implemented (Desk + Approvals scaffolds, runtime bridge) · In progress (Integrations, Activity surfaces)
 
 ## Current Implementation Snapshot
 
@@ -23,8 +23,8 @@ providers stay isolated per surface.
 
 | Route segment | Purpose | Shared state slice | Notes |
 |---------------|---------|--------------------|-------|
-| `src/app/(desk)/desk/page.tsx` | Primary queue of proposals surfaced by the agent | `desk.queue`, `desk.metrics` | Hydrates from Supabase once the catalog/objectives services land. Includes semantic search over proposal history. |
-| `src/app/(approvals)/approvals/page.tsx` | Human-in-the-loop approvals modal + history | `approvals.modal`, `approvals.history` | Renders JSON Schema forms sourced from `tool_catalog.schema`. Surfaces similar past approvals via embeddings. |
+| `src/app/(workspace)/desk/page.tsx` | Primary queue of proposals surfaced by the agent | `desk.queue`, `desk.metrics` | Scaffolded: streams queue updates via `StateDeltaEvent`s, hydrates from Supabase when available, renders approval shortcuts. |
+| `src/app/(workspace)/approvals/page.tsx` | Human-in-the-loop approvals modal + history | `approvalModal`, `approvals.history` | Scaffolded: renders `approval-modal.json` schema-driven forms, persists form state via shared state and emits approve/reject actions. |
 | `src/app/(integrations)/integrations/page.tsx` | Connected accounts and scope upgrades | `integrations.accounts`, `integrations.requests` | Surfaces `services.catalog` data and initiation links for Composio OAuth. |
 | `src/app/(activity)/activity/page.tsx` | Audit log, DLQ state, guardrail banners | `activity.timeline`, `activity.guardrails` | Consumes `guardrail-state.json` snapshots + audit feed. Supports semantic search over audit logs. |
 
@@ -70,7 +70,8 @@ flowchart LR
   - `docs/schemas/approval-modal.json` → approval modal renderer props.
   - `docs/schemas/guardrail-state.json` → guardrail banners and trust status widgets.
 - Shared state slices initialise via `useCoAgent` with deterministic defaults; updates
-  arrive via `StateDeltaEvent`s emitted from the ADK callbacks.
+  now arrive via `StateDeltaEvent`s emitted whenever the callbacks mutate `desk`,
+  `approvalModal`, `guardrails`, or `outbox` (see `agent/services/state.py`).
 - Long-lived state (queue, approvals history) persists via Supabase once the persistence
   layer lands. The agent should load persisted data and emit it as part of the initial
   state so the UI stays optimistic.
@@ -103,8 +104,9 @@ Implementation recipes live in `docs/implementation/frontend-shared-state.md` an
 
 ## Verification & Testing Expectations
 
-- **Playwright smoke tests** – cover sidebar boot, desk queue render, approval
-  submit/cancel, and guardrail banner visibility (`docs/implementation/frontend-shared-state.md`).
+- **Playwright smoke tests** – reference implementations live in
+  `libs_docs/copilotkit_examples/tests/`. They cover sidebar boot, desk queue render,
+  schema-driven approval submit/cancel, and guardrail banner visibility.
 - **Component tests** – use React Testing Library to validate schema-driven forms render
   correctly when pointed at the JSON schema fixtures.
 - **Manual UX pass** – run `pnpm dev` alongside `uv run python -m agent` and confirm each

@@ -289,10 +289,23 @@ class SupabaseOutboxService(OutboxService):
         return OutboxRecord.from_record(rows[0])
 
     def list_pending(self, *, tenant_id: str | None = None, limit: int = 50) -> Sequence[OutboxRecord]:
-        query = self._table_ref().select("*").eq("status", OutboxStatus.PENDING)
+        now_iso = _utc_now().isoformat()
+        query = (
+            self._table_ref()
+            .select("*")
+            .eq("status", OutboxStatus.PENDING)
+        )
         if tenant_id:
             query = query.eq("tenant_id", tenant_id)
-        response = query.order("created_at").limit(limit).execute()
+
+        query = (
+            query
+            .or_(f"next_run_at.is.null,next_run_at.lte.{now_iso}")
+            .order("next_run_at", nullsfirst=True)
+            .order("created_at")
+            .limit(limit)
+        )
+        response = query.execute()
         rows = getattr(response, "data", []) or []
         return tuple(OutboxRecord.from_record(row) for row in rows)
 

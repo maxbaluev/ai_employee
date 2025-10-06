@@ -22,7 +22,7 @@ Plane, Composio, Approvals/UI, Data/Worker, Observability, Governance).
 - [x] Embed the Composio catalog → envelope → Outbox sequence diagram using
       `libs_docs/composio_next/python/providers/google_adk/google_adk_demo.py` as the source. (`docs/architecture/composio-execution.md`)
 - [ ] Add Supabase ERD and migration conventions. (`docs/architecture/data-roadmap.md`)
-- [ ] Update frontend architecture to include planned Desk/Approvals route layout and
+- [x] Update frontend architecture to include planned Desk/Approvals route layout and
       state contracts. (`docs/architecture/frontend.md`, `docs/implementation/frontend-shared-state.md`)
 
 ## 3. Implementation Guides
@@ -30,7 +30,7 @@ Plane, Composio, Approvals/UI, Data/Worker, Observability, Governance).
 - [x] Provide guardrail module docs + pytest snippets (quiet hours, trust, scopes,
       evidence). (`docs/implementation/backend-callbacks.md`)
 - [x] Draft Composio OAuth + scope handling walkthrough. (`docs/implementation/composio-tooling.md`)
-- [ ] Add Desk/Approvals UI scaffolds that map JSON Schema → form components using
+- [x] Add Desk/Approvals UI scaffolds that map JSON Schema → form components using
       CopilotKit patterns. (`docs/implementation/ui-surfaces.md`, `libs_docs/copilotkit_docs/adk/`)
 
 ## 4. Data & Workers
@@ -63,8 +63,8 @@ Plane, Composio, Approvals/UI, Data/Worker, Observability, Governance).
 
 ### Next Up
 
-1. Document schema-driven approval forms once Composio catalog persistence lands. (`docs/implementation/ui-surfaces.md`, `docs/architecture/composio-execution.md`)
-2. Add Supabase ERD and migration conventions. (`docs/architecture/data-roadmap.md`)
+1. Follow-up: wire automated migration tooling (e.g., Supabase CLI or Sqitch) into CI/CD.
+2. Document integrations/connected-account UX once the surface ships. (`docs/architecture/frontend.md`, `docs/implementation/ui-surfaces.md`)
 
 Update this tracker as milestones land. Remove completed items only when the associated
 code, documentation, and tests are merged.

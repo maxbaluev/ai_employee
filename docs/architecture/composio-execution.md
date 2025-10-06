@@ -38,6 +38,8 @@ Supabase Cron (recurring jobs)
  └─ Nightly job: invoke the catalog sync Edge Function which runs
     `uv run python -m agent.services.catalog_sync` to persist JSON schema + scopes.
     Configure via `cron.schedule()` (pattern documented in `libs_docs/supabase/llms_docs.txt`).
+    The worker respects `next_run_at`, so retries scheduled by the service remain paused
+    until the timestamp elapses.
     All recurring jobs managed via Supabase dashboard (Integrations → Cron) or SQL.
     Track cron definitions in `docs/operations/run-and-observe.md`.
 

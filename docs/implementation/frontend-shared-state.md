@@ -65,6 +65,8 @@ export function DeskView() {
 ### Predictive State Updates
 
 - Agents should stream incremental progress from callbacks using `StateDeltaEvent`.
+- The control plane now reassigns top-level keys in `agent/services/state.py` so ADK
+  emits JSON Patch deltas for every desk, approval, guardrail, and outbox mutation.
   Reuse the timing guidance from
   `libs_docs/copilotkit_docs/pydantic-ai/shared-state/predictive-state-updates.mdx`: send
   optimistic deltas while long-running tools execute, then replace them with a snapshot

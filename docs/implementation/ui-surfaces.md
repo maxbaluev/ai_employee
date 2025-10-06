@@ -1,7 +1,7 @@
 # Building New UI Surfaces
 
-**Status:** Implemented (scaffold + Supabase-backed data) · In progress (productised
-surfaces)
+**Status:** Implemented (desk + approvals scaffolds, schema-driven forms) · In progress
+(productised surfaces)
 
 Use this guide whenever you introduce a new customer-facing surface (Desk, Approvals,
 Integrations, Activity & Safety). The patterns below codify what we learned from the
@@ -16,8 +16,9 @@ CopilotKit examples in `libs_docs/copilotkit_examples/` and the ADK integration 
 - Document the schema in `agent/state_contract.md` and reference the shared-state
   patterns in `libs_docs/copilotkit_docs/adk/shared-state/index.mdx` for bidirectional
   updates.
-- Emit `StateDeltaEvent` updates whenever the agent mutates the slice so UI optimism and
-  replay remain deterministic.
+- Emit `StateDeltaEvent` updates whenever the agent mutates the slice. The control plane
+  now reassigns the `desk`, `approvalModal`, `guardrails`, and `outbox` keys so the AGUI
+  bridge emits JSON Patch deltas automatically.
 
 ```tsx
 "use client";
@@ -43,7 +44,7 @@ export function DeskState() {
 
 ## 2. Compose the React Surface
 
-- Place App Router routes under `src/app/(desk)/`, `src/app/(approvals)/`, etc. to keep
+- Place App Router routes under `src/app/(workspace)/desk`, `src/app/(workspace)/approvals`, etc. to keep
   layout boundaries clean.
 - Use `CopilotSidebar`, `CopilotComposer`, and `CopilotTaskList` from `@copilotkit/react-ui`
   for consistency with the examples under `libs_docs/copilotkit_examples/`.
@@ -67,7 +68,7 @@ export function DeskShell({ children }: { children: React.ReactNode }) {
 
 ### Desk Surface Scaffold
 
-- Render the main queue inside `src/app/(desk)/desk/page.tsx`. Combine shared state with
+- Render the main queue inside `src/app/(workspace)/desk/page.tsx`. Combine shared state with
   any initial data fetched on the server (Supabase).
 - Keep actions idempotent; the agent will replay `StateDeltaEvent`s if the user reloads
   the page.
@@ -135,7 +136,7 @@ export function DeskPage() {
 ### Schema-driven Approval Forms
 
 - Source the schema from the catalog (`tool_catalog.schema`) and map it into the generic
-  form renderer (`JSONSchemaForm` or CopilotKit primitives). Reference
+  form renderer (`JSONSchemaForm` or CopilotKit primitives). Reference the updated
   `docs/schemas/approval-modal.json` for the canonical JSON Schema exposed via shared
   state (see Approval Flow Contract in `docs/implementation/frontend-shared-state.md`).
 - Example scope escalation payload:
@@ -167,7 +168,8 @@ export function DeskPage() {
   ```
 
 - Wire the submit/cancel actions to the CopilotKit handler exactly as shown in the
-  Playwright patterns (shared state test) to keep smoke coverage consistent.
+  Playwright patterns (`libs_docs/copilotkit_examples/tests/approvals.spec.ts`) to keep
+  smoke coverage consistent.
 
 ```tsx
 "use client";

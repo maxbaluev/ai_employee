@@ -135,8 +135,14 @@ class Envelope:
 def stash_last_envelope(state: MutableMapping[str, Any], envelope: Envelope) -> None:
     """Persist metadata about the most recent envelope to shared state."""
 
-    outbox_state = state.setdefault("outbox", {})
-    if isinstance(outbox_state, MutableMapping):
-        outbox_state["last_envelope_id"] = envelope.envelope_id
-        outbox_state["last_envelope_slug"] = envelope.tool_slug
-        outbox_state["last_envelope_created_at"] = envelope.created_at.isoformat()
+    existing = state.get("outbox")
+    if isinstance(existing, MutableMapping):
+        outbox_state: MutableMapping[str, Any] = dict(existing)
+    else:
+        outbox_state = {}
+
+    outbox_state["last_envelope_id"] = envelope.envelope_id
+    outbox_state["last_envelope_slug"] = envelope.tool_slug
+    outbox_state["last_envelope_created_at"] = envelope.created_at.isoformat()
+
+    state["outbox"] = outbox_state

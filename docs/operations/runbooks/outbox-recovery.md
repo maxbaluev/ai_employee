@@ -1,6 +1,6 @@
 # Runbook: Outbox DLQ Recovery
 
-**Status:** Draft (worker implementation pending)
+**Status:** Implemented (worker CLI + Supabase queue live)
 
 This runbook covers recovering from stuck or failed envelopes once the Outbox worker is
 live.
@@ -16,10 +16,10 @@ live.
 
 ## CLI toolkit
 
-Assuming the worker exposes the verbs planned in `docs/architecture/data-roadmap.md`:
+Use the outbox worker CLI shipped in `worker/outbox.py`:
 
 ```bash
-# Inspect queue status for a tenant
+# Inspect queue status for a tenant or the entire fleet
 uv run python -m worker.outbox status --tenant TENANT_ID
 
 # Drain 20 envelopes from the DLQ back into the active queue
@@ -27,6 +27,9 @@ uv run python -m worker.outbox drain --tenant TENANT_ID --limit 20
 
 # Retry a specific DLQ envelope after remediation
 uv run python -m worker.outbox retry-dlq --tenant TENANT_ID --envelope ENVELOPE_ID
+
+# Run the worker loop locally (Ctrl+C to stop)
+uv run python -m worker.outbox start
 ```
 
 If these commands are unavailable, escalate to the platform team for manual Supabase

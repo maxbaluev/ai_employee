@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping, MutableMapping, Sequence
 
@@ -23,11 +24,11 @@ def ensure_desk_state(state: MutableMapping[str, Any]) -> MutableMapping[str, An
             "queue": [],
             "lastUpdated": _utc_now(),
         }
-        state[DESK_STATE_KEY] = desk
     else:
+        desk = dict(desk)
         desk.setdefault("queue", [])
         desk.setdefault("lastUpdated", _utc_now())
-    return desk
+    return _commit_state_slice(state, DESK_STATE_KEY, desk)
 
 
 def seed_queue(
@@ -40,6 +41,7 @@ def seed_queue(
     desk = ensure_desk_state(state)
     desk["queue"] = [dict(item) for item in queue]
     desk["lastUpdated"] = _utc_now()
+    _commit_state_slice(state, DESK_STATE_KEY, desk)
 
 
 def append_queue_item(state: MutableMapping[str, Any], item: Mapping[str, Any]) -> None:
@@ -50,6 +52,7 @@ def append_queue_item(state: MutableMapping[str, Any], item: Mapping[str, Any]) 
     if isinstance(queue, list):
         queue.append(dict(item))
     desk["lastUpdated"] = _utc_now()
+    _commit_state_slice(state, DESK_STATE_KEY, desk)
 
 
 def ensure_guardrail_state(state: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
@@ -58,8 +61,9 @@ def ensure_guardrail_state(state: MutableMapping[str, Any]) -> MutableMapping[st
     guardrail_state = state.get(GUARDRAIL_STATE_KEY)
     if not isinstance(guardrail_state, MutableMapping):
         guardrail_state = {}
-        state[GUARDRAIL_STATE_KEY] = guardrail_state
-    return guardrail_state
+    else:
+        guardrail_state = dict(guardrail_state)
+    return _commit_state_slice(state, GUARDRAIL_STATE_KEY, guardrail_state)
 
 
 def write_guardrail_results(
@@ -75,6 +79,7 @@ def write_guardrail_results(
         if key is None or payload is None:
             continue
         guardrails[key] = payload
+    _commit_state_slice(state, GUARDRAIL_STATE_KEY, guardrails)
 
 
 def _normalise_guardrail_result(
@@ -145,8 +150,9 @@ def ensure_approval_modal(state: MutableMapping[str, Any]) -> MutableMapping[str
             "requiredScopes": [],
             "approvalState": "pending",
         }
-        state[APPROVAL_MODAL_KEY] = modal
-    return modal
+    else:
+        modal = dict(modal)
+    return _commit_state_slice(state, APPROVAL_MODAL_KEY, modal)
 
 
 def set_approval_modal(
@@ -167,7 +173,30 @@ def set_approval_modal(
             "approvalState": "pending",
         }
     )
+    _commit_state_slice(state, APPROVAL_MODAL_KEY, modal)
 
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _commit_state_slice(
+    state: MutableMapping[str, Any],
+    key: str,
+    value: Mapping[str, Any],
+) -> MutableMapping[str, Any]:
+    """Write a deepcopy of ``value`` into ``state`` so ADK emits a state delta."""
+
+    materialised = deepcopy(value)
+    if hasattr(state, "__setitem__"):
+        state[key] = materialised
+        # ``state.get`` returns the version stored in the ADK state wrapper.
+        stored = state.get(key)
+        if isinstance(stored, MutableMapping):
+            return stored
+        if isinstance(stored, Mapping):
+            return dict(stored)
+        return materialised if isinstance(materialised, MutableMapping) else dict(materialised)
+
+    state[key] = materialised
+    return state[key] if isinstance(state[key], MutableMapping) else dict(state[key])

@@ -47,7 +47,8 @@ guardrails move together.
 - `agent/services/settings.py` (pydantic-settings) feeds guardrails, Composio, and Supabase configs with env parity across environments.
 - `agent/services/catalog_sync.py` runs the Composio → Supabase catalog sync (Supabase Cron entrypoint).
 - In-memory fallbacks exist for catalog/objectives/outbox; Supabase implementations land in Phases 2 and 4.
-- Worker skeleton (`worker/outbox.py`) and shared JSON schemas (`docs/schemas/*`) are committed.
+- Worker CLI (`worker/outbox.py`) orchestrates Supabase-backed queue execution with retries.
+- Desk and Approvals surfaces live under `src/app/(workspace)/*` and render shared state emitted by the agent.
 
 ## Target Architecture
 ```
@@ -120,20 +121,20 @@ Goals: persist the tool catalog, manage OAuth, execute envelopes.
 - [x] Schedule nightly catalog sync with telemetry (Supabase Cron + Edge Functions + Tenacity for retries) documented in `docs/operations/run-and-observe.md`.
 Depends on Phase 1 service boundaries.
 
-### Phase 3 · Approvals & Frontend State 📋
+### Phase 3 · Approvals & Frontend State ✅ (complete)
 Goals: schema-driven approval surfaces with CopilotKit parity.
-- [ ] Document Desk/Approvals layout & state contracts (`docs/architecture/frontend.md`).
-- [ ] Scaffold approval forms from JSON Schema (`docs/implementation/ui-surfaces.md`, `docs/schemas/approval-modal.json`).
-- [ ] Emit `StateDeltaEvent`s for all agent mutations (`agent/callbacks/after.py`).
-- [ ] Add Playwright coverage for sidebar boot, desk render, approval submit/cancel, guardrail banner (`libs_docs/copilotkit_examples/tests`).
+- [x] Document Desk/Approvals layout & state contracts (`docs/architecture/frontend.md`).
+- [x] Scaffold approval forms from JSON Schema (`docs/implementation/ui-surfaces.md`, `docs/schemas/approval-modal.json`).
+- [x] Emit `StateDeltaEvent`s for agent-driven mutations (`agent/services/state.py`, `agent/agents/control_plane.py`).
+- [x] Add Playwright coverage patterns for sidebar boot, desk render, approval submit/cancel, guardrail banner (`libs_docs/copilotkit_examples/tests`).
 Requires Phase 2 catalog persistence for schema hydration.
 
-### Phase 4 · Data Persistence & Outbox Worker 🔄
+### Phase 4 · Data Persistence & Outbox Worker ✅ (complete)
 Goals: replace in-memory services with Supabase + ship the Outbox executor.
 - [x] Baseline migrations + seeds committed (`db/migrations/001_init.sql`, `db/seeds/000_demo_tenant.sql`).
-- [ ] Implement Supabase-backed Outbox service + retry semantics (`agent/services/outbox.py`, `worker/outbox.py`).
-- [ ] Document DLQ replay flow end-to-end (`docs/operations/runbooks/outbox-recovery.md`).
-- [ ] Add ERD + migration conventions (`docs/architecture/data-roadmap.md`).
+- [x] Implement Supabase-backed Outbox service + retry semantics (`agent/services/outbox.py`, `worker/outbox.py`).
+- [x] Document DLQ replay flow end-to-end (`docs/operations/runbooks/outbox-recovery.md`).
+- [x] Add ERD + migration conventions (`docs/architecture/data-roadmap.md`).
 Depends on Phase 2 envelope contracts.
 
 ### Phase 5 · Observability & Operations 📋

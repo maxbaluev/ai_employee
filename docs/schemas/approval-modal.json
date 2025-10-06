@@ -1,10 +1,18 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://docs.example.com/schemas/approval-modal.json",
-  "$comment": "DRAFT: sync with frontend-shared-state.md before production use.",
+  "$comment": "Keep in sync with docs/implementation/frontend-shared-state.md",
   "title": "ApprovalModal",
   "type": "object",
-  "required": ["envelopeId", "proposal", "requiredScopes"],
+  "required": [
+    "envelopeId",
+    "proposal",
+    "requiredScopes",
+    "approvalState",
+    "schema",
+    "formData",
+    "actions"
+  ],
   "properties": {
     "envelopeId": { "type": "string" },
     "proposal": {
@@ -25,9 +33,62 @@
     },
     "approvalState": {
       "type": "string",
-      "enum": ["pending", "authorized", "denied"],
+      "enum": ["pending", "authorized", "denied", "cancelled"],
       "default": "pending"
+    },
+    "schema": {
+      "type": "object",
+      "description": "JSON Schema describing the approval form to render",
+      "additionalProperties": true
+    },
+    "uiSchema": {
+      "type": "object",
+      "description": "Optional UI schema overrides (react-jsonschema-form compatible)",
+      "additionalProperties": true
+    },
+    "formData": {
+      "type": "object",
+      "description": "Current form data captured from the human reviewer",
+      "additionalProperties": true
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Supplementary metadata surfaced alongside the proposal",
+      "additionalProperties": true
+    },
+    "actions": {
+      "type": "object",
+      "required": ["approve", "reject", "cancel"],
+      "properties": {
+        "approve": { "$ref": "#/defs/action" },
+        "reject": { "$ref": "#/defs/action" },
+        "cancel": { "$ref": "#/defs/action" }
+      },
+      "additionalProperties": false
+    },
+    "lastUpdated": {
+      "type": "string",
+      "format": "date-time"
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "defs": {
+    "action": {
+      "type": "object",
+      "required": ["label", "action"],
+      "properties": {
+        "label": { "type": "string" },
+        "action": {
+          "type": "string",
+          "description": "Copilot action identifier to invoke when the control is pressed"
+        },
+        "variant": {
+          "type": "string",
+          "enum": ["primary", "secondary", "destructive", "ghost"],
+          "default": "primary"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
 }

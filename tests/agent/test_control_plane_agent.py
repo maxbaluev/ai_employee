@@ -3,9 +3,13 @@
 from types import SimpleNamespace
 
 from agent.agents.blueprints import DeskBlueprint
+from google.adk.sessions.state import State
+
 from agent.agents.coordinator import CoordinatorDependencies
 from agent.agents.control_plane import _build_enqueue_envelope_tool
 from agent.services import (
+    APPROVAL_MODAL_KEY,
+    DESK_STATE_KEY,
     AppSettings,
     InMemoryCatalogService,
     InMemoryObjectivesService,
@@ -94,3 +98,22 @@ def test_enqueue_envelope_includes_default_scopes() -> None:
     required_scopes = modal.get("requiredScopes") if isinstance(modal, dict) else None
     assert required_scopes is not None
     assert "GLOBAL_SCOPE" in required_scopes
+
+
+def test_enqueue_envelope_emits_state_delta() -> None:
+    deps, blueprint = _build_dependencies()
+    enqueue_tool = _build_enqueue_envelope_tool(deps, blueprint)
+
+    state_delta: dict[str, object] = {}
+    state = State({}, state_delta)
+    tool_context = SimpleNamespace(state=state)
+    payload = {
+        "tool_slug": "GMAIL__drafts.create",
+        "arguments": {"to": "customer@example.com", "subject": "Renewal"},
+    }
+
+    enqueue_tool(tool_context, payload)
+
+    assert DESK_STATE_KEY in state_delta
+    assert APPROVAL_MODAL_KEY in state_delta
+    assert "outbox" in state_delta

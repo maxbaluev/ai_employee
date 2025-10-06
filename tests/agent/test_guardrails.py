@@ -5,10 +5,11 @@ from unittest.mock import MagicMock
 
 from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import LlmResponse
+from google.adk.sessions.state import State
 from google.genai.types import Content, Part
 
 from agent.agents.blueprints import DeskBlueprint
-from agent.callbacks import build_before_model_modifier
+from agent.callbacks import build_before_model_modifier, build_on_before_agent
 from agent.callbacks.guardrails import (
     GuardrailResult,
     enforce_quiet_hours,
@@ -18,6 +19,9 @@ from agent.callbacks.guardrails import (
     run_guardrails,
 )
 from agent.services import (
+    DESK_STATE_KEY,
+    GUARDRAIL_STATE_KEY,
+    DEFAULT_OBJECTIVES,
     InMemoryCatalogService,
     InMemoryObjectivesService,
     InMemoryOutboxService,
@@ -39,6 +43,12 @@ def _fake_context() -> CallbackContext:
         "enabled_scopes": {"crm.write"},
     }
     return context
+
+
+def _state_context(initial: dict[str, object] | None = None):
+    delta: dict[str, object] = {}
+    state = State(dict(initial or {}), delta)
+    return SimpleNamespace(state=state), delta
 
 
 def test_guardrail_stubs_allow_by_default() -> None:
@@ -102,6 +112,81 @@ def test_before_model_modifier_appends_state() -> None:
     assert "queue" in desk_state
 
 
+def test_on_before_agent_emits_state_delta() -> None:
+    context, delta = _state_context({"trust": {"score": 0.95, "source": "fixture"}})
+    settings = AppSettings()
+    blueprint = DeskBlueprint()
+    objectives = InMemoryObjectivesService(
+        objectives_by_tenant={settings.tenant_id: DEFAULT_OBJECTIVES}
+    )
+    outbox = InMemoryOutboxService()
+    callback = build_on_before_agent(
+        blueprint=blueprint,
+        objectives_service=objectives,
+        outbox_service=outbox,
+        settings=settings,
+    )
+
+    callback(context)
+
+    assert DESK_STATE_KEY in delta
+    assert GUARDRAIL_STATE_KEY in delta
+
+
+def test_before_model_modifier_emits_state_delta(monkeypatch) -> None:
+    context, delta = _state_context({
+        "trust": {"score": 0.95, "source": "fixture"},
+        "requested_scopes": set(),
+        "enabled_scopes": set(),
+    })
+    callback = _build_before_callback()
+    llm_request = SimpleNamespace(
+        config=SimpleNamespace(
+            system_instruction=Content(role="system", parts=[Part(text="base")])
+        )
+    )
+
+    monkeypatch.setattr(
+        "agent.callbacks.before.run_guardrails",
+        lambda *_, **__: (
+            GuardrailResult("trust_threshold", allowed=True),
+            GuardrailResult("scope_validation", allowed=True),
+            GuardrailResult("quiet_hours", allowed=True),
+            GuardrailResult("evidence_requirement", allowed=True),
+        ),
+    )
+
+    response = callback(context, llm_request)
+
+    assert response is None
+    assert DESK_STATE_KEY in delta
+    assert GUARDRAIL_STATE_KEY in delta
+
+
+def test_before_model_modifier_state_delta_on_block(monkeypatch) -> None:
+    context, delta = _state_context({"trust": {"score": 0.95, "source": "fixture"}})
+    callback = _build_before_callback()
+    llm_request = SimpleNamespace(
+        config=SimpleNamespace(
+            system_instruction=Content(role="system", parts=[Part(text="base")])
+        )
+    )
+
+    blocked = GuardrailResult("trust_threshold", allowed=False, reason="blocked")
+    monkeypatch.setattr(
+        "agent.callbacks.before.run_guardrails",
+        lambda *_, **__: (blocked,),
+    )
+
+    response = callback(context, llm_request)
+
+    assert isinstance(response, LlmResponse)
+    assert GUARDRAIL_STATE_KEY in delta
+    guardrails = delta[GUARDRAIL_STATE_KEY]
+    assert isinstance(guardrails, dict)
+    assert guardrails.get("trust", {}).get("allowed") is False
+
+
 def _build_before_callback():
     settings = AppSettings()
     blueprint = DeskBlueprint()
@@ -126,7 +211,9 @@ def _build_before_callback():
             )
         }
     )
-    objectives = InMemoryObjectivesService(objectives_by_tenant={settings.tenant_id: ()})
+    objectives = InMemoryObjectivesService(
+        objectives_by_tenant={settings.tenant_id: DEFAULT_OBJECTIVES}
+    )
     audit_logger = StructlogAuditLogger()
     outbox = InMemoryOutboxService()
 

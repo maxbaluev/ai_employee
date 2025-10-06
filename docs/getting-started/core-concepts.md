@@ -1,7 +1,7 @@
 # Core Concepts
 
-**Status:** Implemented (Next.js UI + FastAPI control plane + Supabase/Composio services + coordinator) ·
-In progress (approvals UX)
+**Status:** Implemented (Next.js UI + FastAPI control plane + Supabase/Composio services + coordinator + approvals scaffolds) ·
+In progress (integrations UX)
 
 The AI Employee Platform leans on production-ready vendor stacks (CopilotKit, Google ADK,
 Composio, Supabase) so the repository mostly focuses on wiring, guardrails, and shared
@@ -12,8 +12,8 @@ implementation guides.
 
 - `src/app/api/copilotkit/route.ts` instantiates a `CopilotRuntime` and proxies AGUI
   streaming traffic to the Python agent with `HttpAgent` from `@ag-ui/client`.
-- `src/app/page.tsx` is the live Desk shell. It subscribes to the agent via
-  `useCoAgent`, renders queue cards with schema-driven data, and reacts to
+- `src/app/(workspace)/*` hosts the desk, approvals, and overview pages. Each subscribes
+  to the agent via `useCoAgent`, renders schema-driven UI, and reacts to
   `useCopilotAction` signals (highlighting, optimistic updates, etc.).
 - `docs/implementation/frontend-shared-state.md` documents the state contracts while the
   CopilotKit vendor samples in `libs_docs/copilotkit_docs/` and
@@ -37,7 +37,9 @@ implementation guides.
   variables so the runtime flips between in-memory doubles and Supabase-backed services
   without code changes.
 - `agent/agents/coordinator.py` orchestrates multi-employee flows on top of the same
-  callback + service contracts, keeping surface-specific wiring light.
+  callback + service contracts, keeping surface-specific wiring light, while the
+  callbacks now emit `StateDeltaEvent`s for desk queues, approvals, guardrails, and
+  outbox metadata.
 
 ## 3. Composio Execution Layer
 
