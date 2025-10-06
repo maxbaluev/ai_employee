@@ -56,3 +56,7 @@ agent/.venv/
 
 # agent tooling output
 /.code/agents/
+
+
+.venv
+node_modules
