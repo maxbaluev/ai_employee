@@ -26,16 +26,18 @@ def check(
     quiet_window: QuietWindow,
     *,
     clock: Optional[Callable[[], datetime]] = None,
-    fallback_reason: Optional[str] = None,
+    configuration_message: Optional[str] = None,
 ) -> GuardrailResult:
     """Evaluate the quiet hours guardrail for the current invocation."""
 
     _ = ctx  # reserved for future context-dependent logic
     if quiet_window is None:
+        message = configuration_message or "quiet hours not configured; allowing"
         return GuardrailResult(
             "quiet_hours",
             allowed=True,
-            reason=fallback_reason or "quiet hours not configured; allowing",
+            reason=message,
+            metadata={"configured": False},
         )
 
     now = ensure_aware((clock or _utc_now)())
@@ -45,12 +47,30 @@ def check(
         reason = (
             f"Quiet hours active ({window_label}); current time {now.strftime('%H:%M UTC')}"
         )
-        return GuardrailResult("quiet_hours", allowed=False, reason=reason)
+        return GuardrailResult(
+            "quiet_hours",
+            allowed=False,
+            reason=reason,
+            metadata={
+                "configured": True,
+                "window": window_label,
+                "currentTime": now.strftime("%H:%M:%S UTC"),
+            },
+        )
 
     reason = (
         f"Outside quiet hours ({window_label}); current time {now.strftime('%H:%M UTC')}"
     )
-    return GuardrailResult("quiet_hours", allowed=True, reason=reason)
+    return GuardrailResult(
+        "quiet_hours",
+        allowed=True,
+        reason=reason,
+        metadata={
+            "configured": True,
+            "window": window_label,
+            "currentTime": now.strftime("%H:%M:%S UTC"),
+        },
+    )
 
 
 def _utc_now() -> datetime:

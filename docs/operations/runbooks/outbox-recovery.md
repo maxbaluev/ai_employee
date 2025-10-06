@@ -20,13 +20,13 @@ Assuming the worker exposes the verbs planned in `docs/architecture/data-roadmap
 
 ```bash
 # Inspect queue status for a tenant
-mise run worker:status --tenant TENANT_ID
+uv run python -m worker.outbox status --tenant TENANT_ID
 
 # Drain 20 envelopes from the DLQ back into the active queue
-mise run worker:drain --tenant TENANT_ID --source dlq --limit 20
+uv run python -m worker.outbox drain --tenant TENANT_ID --limit 20
 
 # Retry a specific DLQ envelope after remediation
-mise run worker:retry-dlq --tenant TENANT_ID --envelope ENVELOPE_ID
+uv run python -m worker.outbox retry-dlq --tenant TENANT_ID --envelope ENVELOPE_ID
 ```
 
 If these commands are unavailable, escalate to the platform team for manual Supabase
@@ -53,7 +53,7 @@ updates or direct worker intervention.
    audit log for the latest failure reason (source: `docs/governance/security-and-guardrails.md`).
 2. **Remediate cause** – Apply one of the remediation options above (scopes, schema fix,
    provider conflict).
-3. **Replay command** – Execute `mise run worker:retry-dlq --tenant TENANT_ID --envelope ENVELOPE_ID`
+3. **Replay command** – Execute `uv run python -m worker.outbox retry-dlq --tenant TENANT_ID --envelope ENVELOPE_ID`
    or drain a batch (`--limit`) if multiple envelopes share the same root cause.
 4. **Audit expectations** – Ensure the worker emits an `audit_log` entry containing
    `actor_type='worker'`, the `envelope_id`, and a succinct reason (`retry-after-fix`). If

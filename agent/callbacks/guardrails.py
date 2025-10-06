@@ -13,7 +13,7 @@ except ImportError as exc:  # pragma: no cover
         "Install the vendor package and retry."
     ) from exc
 
-from ..services.settings import get_settings
+from ..services.settings import AppSettings, get_settings
 
 from ..guardrails import resolve_quiet_hours_window
 from ..guardrails.evidence import check as evidence_check
@@ -23,26 +23,34 @@ from ..guardrails.shared import GuardrailResult
 from ..guardrails.trust import check as trust_check
 
 
-def enforce_quiet_hours(callback_context: CallbackContext) -> GuardrailResult:
+def enforce_quiet_hours(
+    callback_context: CallbackContext,
+    *,
+    settings: AppSettings | None = None,
+) -> GuardrailResult:
     """Evaluate quiet hours against the configured window."""
 
-    settings = get_settings()
+    active_settings = settings or get_settings()
     window, reason = resolve_quiet_hours_window(
-        settings.quiet_hours_start_hour,
-        settings.quiet_hours_end_hour,
+        active_settings.quiet_hours_start_hour,
+        active_settings.quiet_hours_end_hour,
     )
     return quiet_hours_check(
         callback_context,
         quiet_window=window,
         clock=_utc_now,
-        fallback_reason=reason,
+        configuration_message=reason,
     )
 
 
-def enforce_trust_threshold(callback_context: CallbackContext) -> GuardrailResult:
+def enforce_trust_threshold(
+    callback_context: CallbackContext,
+    *,
+    settings: AppSettings | None = None,
+) -> GuardrailResult:
     """Evaluate trust signals against the configured threshold."""
 
-    settings = get_settings()
+    active_settings = settings or get_settings()
     tenant_state = getattr(callback_context, "state", {}) or {}
     trust_state = tenant_state.get("trust") if isinstance(tenant_state, dict) else None
 
@@ -56,20 +64,29 @@ def enforce_trust_threshold(callback_context: CallbackContext) -> GuardrailResul
     return trust_check(
         callback_context,
         approvals_ratio=approvals_ratio,
-        threshold=settings.trust_threshold,
+        threshold=active_settings.trust_threshold,
         source=source,
     )
 
 
-def enforce_scope_validation(callback_context: CallbackContext) -> GuardrailResult:
+def enforce_scope_validation(
+    callback_context: CallbackContext,
+    *,
+    settings: AppSettings | None = None,
+) -> GuardrailResult:
     """Ensure requested scopes are enabled when enforcement is active."""
 
-    settings = get_settings()
-    if not settings.enforce_scope_validation:
+    active_settings = settings or get_settings()
+    if not active_settings.enforce_scope_validation:
         return GuardrailResult(
             "scope_validation",
             allowed=True,
             reason="scope validation disabled via settings",
+            metadata={
+                "requestedScopes": [],
+                "enabledScopes": [],
+                "missingScopes": [],
+            },
         )
 
     state = getattr(callback_context, "state", {})
@@ -86,15 +103,20 @@ def enforce_scope_validation(callback_context: CallbackContext) -> GuardrailResu
     )
 
 
-def ensure_evidence_present(callback_context: CallbackContext) -> GuardrailResult:
+def ensure_evidence_present(
+    callback_context: CallbackContext,
+    *,
+    settings: AppSettings | None = None,
+) -> GuardrailResult:
     """Ensure a proposal contains usable supporting evidence when required."""
 
-    settings = get_settings()
-    if not settings.require_evidence:
+    active_settings = settings or get_settings()
+    if not active_settings.require_evidence:
         return GuardrailResult(
             "evidence_requirement",
             allowed=True,
             reason="evidence requirement disabled via settings",
+            metadata={"required": False, "missingEvidence": []},
         )
 
     state = getattr(callback_context, "state", {})
@@ -105,19 +127,24 @@ def ensure_evidence_present(callback_context: CallbackContext) -> GuardrailResul
             "evidence_requirement",
             allowed=True,
             reason="no proposal to evaluate; allowing",
+            metadata={"required": True, "missingEvidence": []},
         )
 
     return evidence_check(callback_context, proposal)
 
 
-def run_guardrails(callback_context: CallbackContext) -> Tuple[GuardrailResult, ...]:
+def run_guardrails(
+    callback_context: CallbackContext,
+    *,
+    settings: AppSettings | None = None,
+) -> Tuple[GuardrailResult, ...]:
     """Evaluate all guardrails for the current invocation."""
 
     evaluations: Tuple[GuardrailResult, ...] = (
-        enforce_quiet_hours(callback_context),
-        enforce_trust_threshold(callback_context),
-        enforce_scope_validation(callback_context),
-        ensure_evidence_present(callback_context),
+        enforce_quiet_hours(callback_context, settings=settings),
+        enforce_trust_threshold(callback_context, settings=settings),
+        enforce_scope_validation(callback_context, settings=settings),
+        ensure_evidence_present(callback_context, settings=settings),
     )
     return evaluations
 

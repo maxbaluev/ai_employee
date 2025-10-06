@@ -22,12 +22,17 @@ def check(ctx: CallbackContext, proposal: Optional[dict[str, Any]]) -> Guardrail
             "evidence_requirement",
             allowed=True,
             reason="supporting evidence present",
+            metadata={"required": True, "missingEvidence": []},
         )
 
     return GuardrailResult(
         "evidence_requirement",
         allowed=False,
         reason="missing supporting evidence",
+        metadata={
+            "required": True,
+            "missingEvidence": ["No supporting evidence attached"],
+        },
     )
 
 

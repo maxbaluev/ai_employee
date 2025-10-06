@@ -1,8 +1,6 @@
-"""After-invocation callback logic."""
+"""After-invocation callback builders for the control plane agent."""
 
 from __future__ import annotations
-
-from typing import Optional
 
 try:  # pragma: no cover - fail fast when google-adk is missing
     from google.adk.agents.callback_context import CallbackContext
@@ -14,17 +12,19 @@ except ImportError as exc:  # pragma: no cover
     ) from exc
 
 
-def simple_after_model_modifier(
-    callback_context: CallbackContext, llm_response: LlmResponse
-) -> Optional[LlmResponse]:
-    """Stop consecutive tool calls for the demo agent."""
+def build_after_model_modifier(*, blueprint):
+    """Bind the after-model callback to the provided blueprint."""
 
-    if callback_context.agent_name != "ProverbsAgent":
+    def after_model_modifier(
+        callback_context: CallbackContext, llm_response: LlmResponse
+    ) -> LlmResponse | None:
+        blueprint.post_model(callback_context.state, response=llm_response)
+
+        outbox_state = getattr(callback_context, "state", {}).get("outbox")
+        if isinstance(outbox_state, dict) and outbox_state.get("last_envelope_id"):
+            if hasattr(callback_context, "end_invocation"):
+                setattr(callback_context, "end_invocation", True)
+
         return None
 
-    if llm_response.content and llm_response.content.parts:
-        invocation_context = getattr(callback_context, "_invocation_context", None)
-        if invocation_context is not None and hasattr(invocation_context, "end_invocation"):
-            invocation_context.end_invocation = True
-
-    return None
+    return after_model_modifier

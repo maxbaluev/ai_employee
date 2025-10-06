@@ -30,22 +30,29 @@ def test_trust_blocks_below_threshold(callback_context):
     result = _check(callback_context, approvals_ratio=0.55, threshold=0.80)
     assert result.allowed is False
     assert "below" in (result.reason or "").lower()
+    assert result.metadata is not None
+    assert result.metadata.get("score") == pytest.approx(0.55)
+    assert result.metadata.get("threshold") == pytest.approx(0.80)
 
 
 def test_trust_allows_at_exact_threshold(callback_context):
     result = _check(callback_context, approvals_ratio=0.80, threshold=0.80)
     assert result.allowed is True
+    assert result.metadata is not None
 
 
 def test_trust_allows_above_threshold(callback_context):
     result = _check(callback_context, approvals_ratio=0.95, threshold=0.80)
     assert result.allowed is True
+    assert result.metadata is not None
 
 
 def test_trust_treats_missing_score_as_zero(callback_context):
     result = _check(callback_context, approvals_ratio=None, threshold=0.75)
     assert result.allowed is False
     assert "missing" in (result.reason or "").lower()
+    assert result.metadata is not None
+    assert result.metadata.get("missingSignal") is True
 
 
 def test_trust_rejects_threshold_below_zero(callback_context):
@@ -68,6 +75,8 @@ def test_trust_allows_when_source_provided(callback_context):
     result = _check(callback_context, approvals_ratio=0.90, threshold=0.80, source="tenant_metrics")
     assert result.allowed is True
     assert "source=tenant_metrics" in (result.reason or "")
+    assert result.metadata is not None
+    assert result.metadata.get("source") == "tenant_metrics"
 
 
 def test_enforce_trust_blocks_when_score_missing():

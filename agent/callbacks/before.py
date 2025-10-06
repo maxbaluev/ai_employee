@@ -1,89 +1,121 @@
-"""Before-invocation callback logic."""
+"""Before-invocation callback builders for the control plane agent."""
 
 from __future__ import annotations
 
-import json
-from typing import Optional
+from typing import Sequence
 
 try:  # pragma: no cover - fail fast when google-adk is missing
     from google.adk.agents.callback_context import CallbackContext
     from google.adk.models import LlmRequest, LlmResponse
+    from google.genai.types import Content, Part
 except ImportError as exc:  # pragma: no cover
     raise RuntimeError(
         "google-adk must be installed to use the agent callbacks. "
         "Install the vendor package and retry."
     ) from exc
-from google.genai import types
-from google.genai.types import Content, Part
 
-from ..services.state import ensure_proverbs_state
-from .guardrails import GuardrailResult, run_guardrails
+from agent.callbacks.guardrails import GuardrailResult, run_guardrails
+from agent.services import (
+    AuditLogger,
+    CatalogService,
+    ObjectivesService,
+    OutboxService,
+    write_guardrail_results,
+)
+from agent.services.settings import AppSettings
 
 
-def on_before_agent(callback_context: CallbackContext) -> None:
-    """Seed shared state for the session."""
+def build_on_before_agent(
+    *,
+    blueprint,
+    objectives_service: ObjectivesService,
+    outbox_service: OutboxService,
+    settings: AppSettings,
+):
+    """Return a callback that seeds shared state before the agent runs."""
 
-    ensure_proverbs_state(callback_context.state)
-
-
-def before_model_modifier(
-    callback_context: CallbackContext, llm_request: LlmRequest
-) -> Optional[LlmResponse]:
-    """Inject shared state and enforce guardrails before the model runs."""
-
-    guardrail_response = _evaluate_guardrails(callback_context)
-    if guardrail_response is not None:
-        return guardrail_response
-
-    proverbs = ensure_proverbs_state(callback_context.state)
-    proverbs_json = "No proverbs yet"
-    if proverbs:
-        try:
-            proverbs_json = json.dumps(proverbs, indent=2)
-        except (TypeError, ValueError):  # pragma: no cover - defensive fallback
-            proverbs_json = "Error serialising proverbs state"
-
-    original_instruction = (
-        llm_request.config.system_instruction
-        or types.Content(role="system", parts=[])
-    )
-
-    if not isinstance(original_instruction, Content):
-        original_instruction = Content(
-            role="system",
-            parts=[Part(text=str(original_instruction))],
+    def on_before_agent(callback_context: CallbackContext) -> None:
+        objectives = objectives_service.list_objectives(settings.tenant_id)
+        pending = outbox_service.list_pending(tenant_id=settings.tenant_id, limit=25)
+        blueprint.ensure_shared_state(
+            callback_context.state,
+            objectives=objectives,
+            pending=pending,
         )
 
-    if not original_instruction.parts:
-        original_instruction.parts.append(Part(text=""))
-
-    prompt_prefix = (
-        "You are a helpful assistant for maintaining a list of proverbs.\n"
-        f"Current proverbs state: {proverbs_json}\n"
-        "Use the set_proverbs tool whenever you modify the list."
-    )
-
-    existing_text = original_instruction.parts[0].text or ""
-    original_instruction.parts[0].text = prompt_prefix + existing_text
-    llm_request.config.system_instruction = original_instruction
-
-    return None
+    return on_before_agent
 
 
-def _evaluate_guardrails(
-    callback_context: CallbackContext,
-) -> Optional[LlmResponse]:
-    """Run configured guardrails and return a synthetic response when blocked."""
+def build_before_model_modifier(
+    *,
+    blueprint,
+    settings: AppSettings,
+    catalog_service: CatalogService,
+    objectives_service: ObjectivesService,
+    audit_logger: AuditLogger,
+    outbox_service: OutboxService,
+):
+    """Return the before-model modifier bound to the configured dependencies."""
 
-    evaluations = run_guardrails(callback_context)
-    blocking: Optional[GuardrailResult] = next(
-        (result for result in evaluations if not result.allowed),
-        None,
-    )
+    def before_model_modifier(
+        callback_context: CallbackContext, llm_request: LlmRequest
+    ) -> LlmResponse | None:
+        evaluations = run_guardrails(callback_context, settings=settings)
+        write_guardrail_results(callback_context.state, evaluations=evaluations)
 
-    if blocking is None:
+        for evaluation in evaluations:
+            audit_logger.log_guardrail(
+                tenant_id=settings.tenant_id,
+                name=evaluation.name,
+                allowed=evaluation.allowed,
+                reason=evaluation.reason,
+            )
+
+        blocking = _find_blocking_guardrail(evaluations)
+        if blocking is not None:
+            _end_invocation(callback_context)
+            message = blueprint.guardrail_block_message(blocking)
+            return _synthetic_response(message)
+
+        objectives = objectives_service.list_objectives(settings.tenant_id)
+        entries = catalog_service.list_tools(settings.tenant_id)
+        pending = outbox_service.list_pending(tenant_id=settings.tenant_id, limit=25)
+        prompt_prefix = blueprint.prompt_prefix(objectives=objectives, catalog_entries=entries)
+        if prompt_prefix:
+            _prepend_instruction(llm_request, prompt_prefix)
+
+        blueprint.ensure_shared_state(
+            callback_context.state,
+            objectives=objectives,
+            pending=pending,
+        )
         return None
 
-    message = blocking.reason or f"Request blocked by {blocking.name} guardrail."
+    return before_model_modifier
+
+
+def _find_blocking_guardrail(evaluations: Sequence[GuardrailResult]) -> GuardrailResult | None:
+    return next((result for result in evaluations if not result.allowed), None)
+
+
+def _synthetic_response(message: str) -> LlmResponse:
     content = Content(role="model", parts=[Part(text=message)])
     return LlmResponse(content=content)
+
+
+def _prepend_instruction(llm_request: LlmRequest, prefix: str) -> None:
+    system_instruction = llm_request.config.system_instruction
+    if not isinstance(system_instruction, Content):
+        system_instruction = Content(role="system", parts=[Part(text="")])
+
+    if not system_instruction.parts:
+        system_instruction.parts.append(Part(text=""))
+
+    existing = system_instruction.parts[0].text or ""
+    system_instruction.parts[0].text = prefix + "\n\n" + existing
+    llm_request.config.system_instruction = system_instruction
+
+
+def _end_invocation(callback_context: CallbackContext) -> None:
+    if hasattr(callback_context, "end_invocation"):
+        setattr(callback_context, "end_invocation", True)

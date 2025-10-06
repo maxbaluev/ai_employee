@@ -1,14 +1,14 @@
 # Architecture Overview
 
-**Status:** Implemented (UI ↔ ADK bridge) · In progress (Composio tooling) · Planned
-(Supabase control plane, Outbox worker)
+**Status:** Implemented (UI ↔ ADK bridge + Supabase control plane + Outbox worker)
+· In progress (Composio tooling)
 
 This overview summarises how requests flow through the platform today and calls out the
 gaps you must close to reach the product vision captured in the references.
 
 ```
 Browser (Next.js + CopilotKit)
- ├─ Shared state (`useCoAgent`) renders Desk/Approvals surfaces (planned)
+ ├─ Shared state (`useCoAgent`) renders Desk/Approvals surfaces
  └─ Frontend actions (`useCopilotAction`) invoke tools via Copilot Runtime
 
 Next.js API `/api/copilotkit`
@@ -19,13 +19,13 @@ FastAPI app (`agent/agent.py`)
  ├─ Provides before/after callbacks for guardrails + state
  └─ Streams AGUI events back to CopilotKit
 
-Composio (planned integration)
+Composio
  ├─ `Composio.tools.get` discovers schemas & scopes
- └─ `Composio.tools.execute` executes Outbox envelopes
+ └─ `Composio.tools.execute` executes Outbox envelopes (worker-driven)
 
-Supabase/Postgres (planned)
- ├─ Catalog + connected accounts + tasks + audit log
- └─ Driven by APScheduler jobs + Outbox workers
+Supabase/Postgres
+ ├─ Catalog + connected accounts + tasks + audit log (Supabase services)
+ └─ Driven by APScheduler jobs (planned) + Outbox worker (`python -m worker.outbox start`)
 ```
 
 Each component is elaborated in the dedicated sub-pages:

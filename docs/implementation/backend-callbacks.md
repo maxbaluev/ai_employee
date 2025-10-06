@@ -1,20 +1,19 @@
 # Agent Callbacks & Guardrails
 
-**Status:** Implemented (demo callbacks) · In progress (guardrails) · Planned (trust,
-quiet hours, approvals)
+**Status:** Implemented (control plane callbacks + Supabase services) · In progress
+(approvals orchestration)
 
-Callbacks are where we inject business logic into the ADK agent. Today they only power
-the proverbs demo; this guide explains how to evolve them responsibly.
+Callbacks are where we inject business logic into the ADK agent. The control plane
+agent now relies on dedicated callback builders and guardrail modules; this guide
+explains how to extend them safely as more surfaces come online.
 
-## Current Structure (`agent/agent.py`)
+## Current Structure (`agent/callbacks/`)
 
-| Callback | Purpose | Notes |
-|----------|---------|-------|
-| `on_before_agent` | Seed shared state with default proverbs. | Runs once per session. |
-| `before_model_modifier` | Injects state into the system prompt. | Should become the
-  place where we stitch objectives + guardrails. |
-| `simple_after_model_modifier` | Ends invocation after a single tool call. | Replace
-  when adding multi-step plans. |
+| Builder | Purpose | Notes |
+|---------|---------|-------|
+| `build_on_before_agent` | Seeds desk shared state using tenant objectives and pending outbox envelopes. | Runs once per session. |
+| `build_before_model_modifier` | Injects catalog context, evaluates guardrails, enriches prompts. | Logs guardrail outcomes, short-circuits on block, refreshes shared state. |
+| `build_after_model_modifier` | Updates shared state after an LLM response and ends the invocation once an envelope is queued. | Keeps the run deterministic by avoiding additional tool calls. |
 
 > The upstream ADK samples in `libs_docs/copilotkit_docs/adk/` demonstrate
 > short-circuiting requests by setting `callback_context.end_invocation = True`. Avoid
@@ -43,20 +42,25 @@ during local development.
 
 ```
 agent/
- ├─ app.py              # FastAPI wiring
  ├─ agents/
- │   └─ main.py         # LlmAgent definition
+ │   ├─ control_plane.py     # Composio-enabled ADK agent wiring
+ │   └─ blueprints/
+ │       └─ desk.py          # Shared-state + prompt helpers for the desk surface
  ├─ callbacks/
- │   ├─ before.py       # prompt + guardrail synthesis
- │   └─ after.py        # tool chaining, run summary
+ │   ├─ before.py            # Guardrail evaluation + prompt enrichment (builders)
+ │   ├─ after.py             # Post-run shared state updates (builders)
+ │   └─ guardrails.py        # Glue that orchestrates guardrail modules
  ├─ guardrails/
  │   ├─ quiet_hours.py
  │   ├─ trust.py
- │   └─ scopes.py
+ │   ├─ scopes.py
+ │   └─ evidence.py
  └─ services/
-     ├─ catalog.py      # Composio metadata
-     ├─ objectives.py
-     └─ audit.py
+     ├─ catalog.py          # Supabase + Composio catalog adapters
+     ├─ objectives.py       # Supabase tenant objectives (in-memory fixtures for tests)
+     ├─ outbox.py           # Supabase queue + in-memory fixtures
+     ├─ audit.py            # structlog + Supabase audit loggers
+     └─ supabase.py         # Supabase client factory/cache helpers
 ```
 
 ## Guardrail Module Scaffold

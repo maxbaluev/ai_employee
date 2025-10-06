@@ -12,9 +12,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AppSettings(BaseSettings):
     """Strongly-typed configuration for the agent control plane."""
 
-    app_name: str = "proverbs_app"
+    app_name: str = "control_plane_app"
     user_id: str = "demo_user"
+    tenant_id: str = "tenant-demo"
     default_model: str = "gemini-2.5-flash"
+    default_toolkits: tuple[str, ...] = ("GITHUB",)
 
     api_host: str = "0.0.0.0"
     api_port: int = 8000
@@ -57,6 +59,41 @@ class AppSettings(BaseSettings):
             "COMPOSIO_REDIRECT_URL",
         ),
     )
+
+    supabase_url: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "supabase_url",
+            "AI_EMPLOYEE_SUPABASE_URL",
+            "SUPABASE_URL",
+        ),
+    )
+    supabase_service_key: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "supabase_service_key",
+            "AI_EMPLOYEE_SUPABASE_SERVICE_KEY",
+            "SUPABASE_SERVICE_KEY",
+        ),
+    )
+    supabase_anon_key: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "supabase_anon_key",
+            "AI_EMPLOYEE_SUPABASE_ANON_KEY",
+            "SUPABASE_ANON_KEY",
+        ),
+    )
+    supabase_schema: str = "public"
+
+    outbox_poll_interval_seconds: int = 5
+    outbox_batch_size: int = 5
+    outbox_max_attempts: int = 3
+
+    def supabase_enabled(self) -> bool:
+        """Return `True` when Supabase credentials are configured."""
+
+        return bool(self.supabase_url and self.supabase_service_key)
 
     model_config = SettingsConfigDict(
         env_prefix="AI_EMPLOYEE_",

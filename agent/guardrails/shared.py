@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, time, timezone
-from typing import Optional, Tuple
+from typing import Any, Mapping, Optional, Tuple
 
 
 @dataclass(slots=True)
@@ -14,6 +14,7 @@ class GuardrailResult:
     name: str
     allowed: bool
     reason: Optional[str] = None
+    metadata: Mapping[str, Any] | None = None
 
 
 def resolve_quiet_hours_window(
@@ -64,4 +65,3 @@ def in_quiet_window(moment: datetime, window: Tuple[time, time]) -> bool:
 
 def _valid_hour(hour: int) -> bool:
     return 0 <= hour <= 23
-

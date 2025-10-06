@@ -58,11 +58,51 @@ echo "COMPOSIO_CLIENT_ID=..." >> .env
 echo "COMPOSIO_CLIENT_SECRET=..." >> .env
 echo "COMPOSIO_REDIRECT_URL=http://localhost:8000/api/composio/callback" >> .env
 echo "SUPABASE_URL=..." >> .env
+echo "SUPABASE_ANON_KEY=..." >> .env
 echo "SUPABASE_SERVICE_KEY=..." >> .env
 ```
 
 The Python process reads `.env` via `python-dotenv`. Keep UI-only overrides in
-`.env.local` if needed.
+`.env.local` if needed. If you want to pre-configure Supabase before persistence
+goes live, follow the credential bootstrap steps below.
+
+### 3.1 Supabase Credential Bootstrap {#supabase-credential-bootstrap}
+
+**Prerequisites:** Access to a Supabase project you can administer and the Supabase CLI
+(`supabase >= 1.168`). Install the CLI via Homebrew, npm, or the
+[official instructions](https://supabase.com/docs/guides/cli) if it is not already
+available.
+
+1. Authenticate the CLI and link the project you will use for development:
+   ```bash
+   supabase login
+   supabase projects list          # copy the project ref for the desired project
+   supabase link --project-ref <project-ref>
+   ```
+2. In the Supabase dashboard, navigate to **Project Settings → API** and copy the
+   `Project URL`, `anon public` key, and `service_role` key. These values map directly to
+   the environment variables the agent and upcoming workers consume.
+3. Store the secrets in `.env` so backend services can read them:
+   ```bash
+   echo "SUPABASE_URL=https://<project-id>.supabase.co" >> .env
+   echo "SUPABASE_ANON_KEY=..." >> .env
+   echo "SUPABASE_SERVICE_KEY=..." >> .env
+   ```
+   - Place UI-only values (for example `NEXT_PUBLIC_SUPABASE_ANON_KEY`) in `.env.local`
+     to avoid shipping privileged credentials in the browser bundle.
+   - No additional wiring is required—`python-dotenv` loads `.env` automatically when the
+     FastAPI app starts.
+4. Verify the CLI link before running migrations or local jobs:
+   ```bash
+   supabase projects list
+   ```
+   Confirm the project reference you linked in step 1 appears in the output (look for the
+   `Project Ref` column). Re-run `supabase link --project-ref <project-ref>` if you need
+   to switch projects.
+
+> **Security:** Treat the `service_role` key as highly privileged. Never commit it to
+> source control, rotate it from the Supabase dashboard if you suspect exposure, and use
+> the anon key for any client-visible operations.
 
 ## 4. Run the Dev Loop
 
@@ -88,21 +128,25 @@ Run just the frontend with `pnpm run dev:ui`, or only the agent with
 
 ## 6. Optional: Supabase Bootstrap
 
-If you are bringing up Supabase locally, apply the draft schema in `db/migrations/001_init.sql`
-from your Supabase project directory before running migrations of your own:
+If you are bringing up Supabase locally, apply the schema in `db/migrations/001_init.sql`
+and the demo seed in `db/seeds/000_demo_tenant.sql` from your Supabase project directory
+before running migrations of your own:
 
 ```bash
 supabase db execute --file db/migrations/001_init.sql
+supabase db execute --file db/seeds/000_demo_tenant.sql
 # or
 psql $SUPABASE_DATABASE_URL -f db/migrations/001_init.sql
+psql $SUPABASE_DATABASE_URL -f db/seeds/000_demo_tenant.sql
 ```
 
-See `db/README.md` for extension requirements (e.g., `pgcrypto`) and seed placeholders.
+See `db/README.md` for extension requirements (e.g., `pgcrypto`), helper functions, RLS
+policies, and seed details.
 
 If anything fails, start with the troubleshooting checklist in
 `docs/operations/run-and-observe.md`.
 
-## 6. Optional Quality-of-Life Scripts
+## 7. Optional Quality-of-Life Scripts
 
 - `pnpm run dev:debug` – adds `LOG_LEVEL=debug` for verbose agent logs.
 - `scripts/run-agent.sh` / `.bat` – direct agent execution via uv.

@@ -1,5 +1,5 @@
 """Agent factory exports."""
 
-from .proverbs import build_proverbs_adk_agent
+from .control_plane import build_control_plane_agent
 
-__all__ = ["build_proverbs_adk_agent"]
+__all__ = ["build_control_plane_agent"]

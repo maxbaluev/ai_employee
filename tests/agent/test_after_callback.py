@@ -2,20 +2,25 @@
 
 from types import SimpleNamespace
 
-from agent.callbacks.after import simple_after_model_modifier
+from agent.agents.blueprints import DeskBlueprint
+from agent.callbacks.after import build_after_model_modifier
 
 
-def test_simple_after_model_modifier_sets_invocation_context_flag() -> None:
-    """Ensure we stop the Proverbs agent by mutating the invocation context."""
+def test_after_model_modifier_sets_invocation_flag() -> None:
+    """Ensure the callback ends the invocation when an envelope was enqueued."""
+
+    blueprint = DeskBlueprint()
+    after_callback = build_after_model_modifier(blueprint=blueprint)
 
     invocation_context = SimpleNamespace(end_invocation=False)
     callback_context = SimpleNamespace(
-        agent_name="ProverbsAgent",
+        state={"outbox": {"last_envelope_id": "env_123"}},
+        end_invocation=False,
         _invocation_context=invocation_context,
     )
 
-    llm_response = SimpleNamespace(content=SimpleNamespace(parts=[object()]))
+    llm_response = SimpleNamespace(content=None)
 
-    simple_after_model_modifier(callback_context, llm_response)
+    after_callback(callback_context, llm_response)
 
-    assert invocation_context.end_invocation is True
+    assert callback_context.end_invocation is True

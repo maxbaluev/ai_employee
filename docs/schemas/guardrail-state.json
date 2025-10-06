@@ -10,7 +10,10 @@
       "required": ["allowed", "message"],
       "properties": {
         "allowed": { "type": "boolean" },
-        "message": { "type": "string" }
+        "message": { "type": "string" },
+        "configured": { "type": "boolean" },
+        "window": { "type": "string" },
+        "currentTime": { "type": "string" }
       },
       "additionalProperties": false
     },
@@ -20,19 +23,49 @@
       "properties": {
         "allowed": { "type": "boolean" },
         "score": { "type": "number" },
-        "source": { "type": "string" }
+        "threshold": { "type": "number" },
+        "source": { "type": "string" },
+        "missingSignal": { "type": "boolean" },
+        "message": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "scopeValidation": {
+      "type": "object",
+      "required": ["allowed", "missingScopes", "requestedScopes", "enabledScopes"],
+      "properties": {
+        "allowed": { "type": "boolean" },
+        "missingScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "requestedScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "enabledScopes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "message": { "type": "string" }
       },
       "additionalProperties": false
     },
     "evidence": {
       "type": "object",
-      "required": ["required"],
+      "required": ["required", "allowed", "missingEvidence"],
       "properties": {
         "required": { "type": "boolean" },
+        "allowed": { "type": "boolean" },
         "missingEvidence": {
           "type": "array",
-          "items": { "type": "string" }
-        }
+          "items": { "type": "string" },
+          "default": []
+        },
+        "message": { "type": "string" }
       },
       "additionalProperties": false
     }

@@ -43,20 +43,38 @@ def check(
     elif ratio > 1.0:
         ratio = 1.0
 
+    metadata = {
+        "score": ratio,
+        "threshold": threshold,
+        "missingSignal": missing_signal,
+    }
+    if source:
+        metadata["source"] = source
+
     if ratio < threshold:
         reason = _format_reason(
             f"Trust score {ratio:.4f} below threshold {threshold:.4f}",
             source,
             missing=missing_signal,
         )
-        return GuardrailResult("trust_threshold", allowed=False, reason=reason)
+        return GuardrailResult(
+            "trust_threshold",
+            allowed=False,
+            reason=reason,
+            metadata=metadata,
+        )
 
     reason = _format_reason(
         f"Trust score {ratio:.4f} meets threshold {threshold:.4f}",
         source,
         missing=missing_signal,
     )
-    return GuardrailResult("trust_threshold", allowed=True, reason=reason)
+    return GuardrailResult(
+        "trust_threshold",
+        allowed=True,
+        reason=reason,
+        metadata=metadata,
+    )
 
 
 def _format_reason(message: str, source: Optional[str], *, missing: bool) -> str:

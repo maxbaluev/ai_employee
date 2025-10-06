@@ -1,10 +1,12 @@
 # Data & Roadmap
 
-**Status:** Planned (no persistent storage implemented yet)
+**Status:** Implemented (Supabase schema, seeds, Outbox worker) · In progress (APScheduler
+sync jobs, connected-account lifecycle)
 
-Although `pyproject.toml` already lists database- and scheduling-related dependencies,
-the repository currently operates entirely in memory. This document anchors the future
-state so we build a consistent control plane as we add persistence.
+The Supabase schema now ships in `db/migrations/001_init.sql` alongside a demo seed in
+`db/seeds/000_demo_tenant.sql`. In-memory shims remain for unit tests, but the control
+plane defaults to Supabase whenever credentials are provided. Use this document to track
+remaining persistence work and the conventions expected for new tables.
 
 ## Target Supabase Schema (Draft)
 
@@ -19,15 +21,17 @@ evolve the schema in lock-step with the agent.
 - **Cross-links:** feeds guardrail defaults (`docs/governance/security-and-guardrails.md`).
 
 ### `objectives`
-- **Columns:** `id uuid pk`, `tenant_id uuid references tenants(id)`, `title text`, `metric text`, `target numeric`, `horizon interval`, timestamps.
+- **Columns:** `id uuid pk`, `tenant_id uuid references tenants(id)`, `title text`, `metric text`,
+  `target text`, `horizon text`, `summary text`, timestamps.
 - **Indexes:** `create index objectives_tenant_metric_idx on objectives(tenant_id, metric)`.
-- **RLS:** tenant-scoped policy `using (tenant_id = auth.jwt() ->> 'tenant_id')::uuid`.
+- **RLS:** tenant-scoped policy reuses `current_tenant_id_uuid()`; service role can insert/update.
 - **Cross-links:** aligns with shared state schema (`docs/implementation/frontend-shared-state.md`).
 
 ### `guardrails`
-- **Columns:** `id uuid pk`, `tenant_id uuid references tenants(id)`, `quiet_hours jsonb`, `trust_threshold numeric`, `scopes jsonb`, timestamps.
+- **Columns:** `id uuid pk`, `tenant_id uuid references tenants(id)`, `quiet_hours jsonb`,
+  `trust_threshold numeric`, `scopes jsonb`, `require_evidence boolean`, timestamps.
 - **Indexes:** `create unique index guardrails_tenant_uidx on guardrails(tenant_id)`.
-- **RLS:** allow select/update for tenant owners only; block insert without service role.
+- **RLS:** tenant owners can select/update their record; service role manages inserts.
 - **Cross-links:** maps to guardrail docs (`docs/governance/security-and-guardrails.md`, `docs/implementation/backend-callbacks.md`).
 
 ### `connected_accounts`
@@ -37,16 +41,31 @@ evolve the schema in lock-step with the agent.
 - **Cross-links:** matches Composio integration guide (`docs/implementation/composio-tooling.md`).
 
 ### `tool_catalog`
-- **Columns:** `id bigserial pk`, `tenant_id uuid references tenants(id)`, `tool_slug text`, `version text`, `risk text`, `schema jsonb`, `updated_at timestamptz`.
+- **Columns:** `id bigserial pk`, `tenant_id uuid references tenants(id)`, `tool_slug text`,
+  `display_name text`, `description text`, `version text`, `risk text`, `schema jsonb`,
+  `required_scopes text[]`, `updated_at timestamptz`.
 - **Indexes:** `create unique index tool_catalog_tenant_slug_version_idx on tool_catalog(tenant_id, tool_slug, version)`.
-- **RLS:** read access for tenant; write restricted to catalog sync job.
+- **RLS:** tenants can select their entries; the service role (catalog sync job) performs inserts/updates.
 - **Cross-links:** forms the backing store for schema-driven UI (`docs/implementation/frontend-shared-state.md`).
 
 ### `outbox`
-- **Columns:** `id uuid pk`, `tenant_id uuid references tenants(id)`, `envelope jsonb`, `status text`, `attempts integer default 0`, `external_id text`, `next_run_at timestamptz`, `last_error text`.
-- **Indexes:** `create index outbox_tenant_status_idx on outbox(tenant_id, status)` and `create unique index outbox_external_id_uidx on outbox(external_id)`.
-- **RLS:** allow select/insert/update for tenant owners; worker runs with elevated role.
+- **Columns:** `id uuid pk`, `tenant_id uuid references tenants(id)`, `tool_slug text`,
+  `arguments jsonb`, `connected_account_id text`, `risk text`, `external_id text`,
+  `trust_context jsonb`, `metadata jsonb`, `status text`, `attempts integer`,
+  `next_run_at timestamptz`, `last_error text`, timestamps.
+- **Indexes:** `create index outbox_tenant_status_idx on outbox(tenant_id, status)` and
+  `create unique index outbox_external_id_uidx on outbox(external_id)`.
+- **RLS:** tenants can read their queue; the agent/worker (service role) performs
+  inserts and updates.
 - **Cross-links:** supports worker contract (`#outbox-worker-contract` below).
+
+### `outbox_dlq`
+- **Columns:** `id uuid pk`, `tenant_id uuid references tenants(id)`, `tool_slug text`,
+  `arguments jsonb`, `connected_account_id text`, `risk text`, `external_id text`,
+  `trust_context jsonb`, `metadata jsonb`, `status text`, `attempts integer`,
+  `last_error text`, `created_at`, `moved_at`.
+- **Indexes:** `create index outbox_dlq_tenant_idx on outbox_dlq(tenant_id, moved_at desc)`.
+- **RLS:** tenants can read their DLQ entries; the worker (service role) manages inserts/deletes.
 
 ### `audit_log`
 - **Columns:** `id bigint generated always as identity primary key`, `tenant_id uuid`, `actor_type text`, `actor_id text`, `category text`, `payload jsonb`, `created_at timestamptz default now()`.
@@ -135,30 +154,30 @@ Adjust policies once authentication wiring is finalised.
 - Telemetry: latency histogram, attempt counter, failure counter, conflict counter, and
   dlq size metric.
 
-### Outbox Worker Operations (planned)
+### Outbox Worker Operations (`worker/outbox.py`)
 
 - **CLI verbs** (`uv run python -m worker.outbox <command>`):
-  - `start` – launch the continuous processing loop.
-  - `status` – output queue depth, DLQ size, last processed envelope timestamp, and worker version.
-  - `drain [--tenant <uuid>]` – process all pending envelopes (optionally scoped to a tenant) then exit.
-  - `pause` / `resume` – toggle new-work intake while keeping the process alive.
-  - `retry-dlq [--limit N]` – requeue envelopes from the DLQ with bounded concurrency.
+  - `start` – launch the continuous processing loop (use `--once` for a single batch).
+  - `status` – output queue depth and DLQ size (optionally scoped to `--tenant`).
+  - `drain [--tenant <uuid>] [--limit N]` – requeue DLQ envelopes back into the pending queue.
+  - `retry-dlq --tenant <uuid> --envelope <id>` – requeue a specific DLQ envelope after remediation.
 - **Telemetry surface** (export via `/metrics` and OTLP):
   - `outbox_processed_total{tenant,status}` – counter with `status=success|retry|failed`.
   - `outbox_processing_duration_seconds` – histogram for envelope latency (p50/p95/p99).
   - `outbox_dlq_size{tenant}` – gauge capturing backlog.
   - `outbox_retry_total{tenant}` – counter for retry attempts.
   - `outbox_processed_per_minute` – derived Prometheus rate used in dashboards.
-- **Health checks**:
+- **Health checks** (planned additions):
   - `/healthz` – reports healthy when the worker loop is active and Supabase connectivity is verified.
   - `/metrics` – Prometheus endpoint exposing the telemetry above.
   - `status` exit code – non-zero when DLQ backlog exceeds SLO threshold (enables smoke checks in CI/CD).
 
 ## Interim Approach
 
-Until Supabase is online, keep behaviour in memory but preserve the module boundaries
-above. Design the interfaces (`CatalogService`, `OutboxRepository`, `AuditLogger`) so the
-in-memory implementation can later be swapped for Supabase-backed versions without
-touching the agent or UI.
 
 Update this document whenever the data model changes or jobs are added.
+
+The in-memory implementations remain available for unit tests, but production code paths
+now default to Supabase. Continue to design interfaces (`CatalogService`,
+`ObjectivesService`, `OutboxService`, `AuditLogger`) so additional backends can be added
+without refactoring the agent, worker, or UI.

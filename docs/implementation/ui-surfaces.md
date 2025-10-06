@@ -1,7 +1,7 @@
 # Building New UI Surfaces
 
-**Status:** Implemented (scaffold + shared state demo) · In progress (productised
-surfaces) · Planned (Supabase-backed data fetch)
+**Status:** Implemented (scaffold + Supabase-backed data) · In progress (productised
+surfaces)
 
 Use this guide whenever you introduce a new customer-facing surface (Desk, Approvals,
 Integrations, Activity & Safety). The patterns below codify what we learned from the
@@ -47,8 +47,8 @@ export function DeskState() {
   layout boundaries clean.
 - Use `CopilotSidebar`, `CopilotComposer`, and `CopilotTaskList` from `@copilotkit/react-ui`
   for consistency with the examples under `libs_docs/copilotkit_examples/`.
-- Hydrate initial data from REST endpoints (Supabase once available) and merge subsequent
-  updates from shared state.
+- Hydrate initial data from Supabase-backed REST endpoints and merge subsequent updates
+  from shared state.
 - Lean on the generative UI primitives outlined in
   `libs_docs/copilotkit_docs/adk/generative-ui/index.mdx` for cards, tables, and inline
   summaries instead of bespoke components.
@@ -64,6 +64,61 @@ export function DeskShell({ children }: { children: React.ReactNode }) {
   );
 }
 ```
+
+### Desk Surface Scaffold
+
+- Render the main queue inside `src/app/(desk)/desk/page.tsx`. Combine shared state with
+  any initial data fetched on the server (Supabase).
+- Keep actions idempotent; the agent will replay `StateDeltaEvent`s if the user reloads
+  the page.
+
+```tsx
+"use client";
+
+import { useCoAgent, useCopilotAction } from "@copilotkit/react-core";
+import { DeskCard } from "@/components/desk-card";
+
+type DeskState = {
+  queue: Array<{
+    id: string;
+    title: string;
+    evidence: string[];
+    status: "pending" | "approved" | "rejected";
+  }>;
+};
+
+export function DeskPage() {
+  const { state, setState } = useCoAgent<DeskState>({
+    name: "desk",
+    initialState: { queue: [] },
+  });
+
+  useCopilotAction({
+    name: "desk:updateStatus",
+    parameters: [{ name: "id", type: "string", required: true }, { name: "status", type: "string", required: true }],
+    handler: ({ id, status }) =>
+      setState((prev) => ({
+        ...prev,
+        queue: prev.queue.map((item) =>
+          item.id === id ? { ...item, status: status as DeskState["queue"][number]["status"] } : item,
+        ),
+      })),
+  });
+
+  return (
+    <section className="space-y-3">
+      {state.queue.map((item) => (
+        <DeskCard key={item.id} task={item} />
+      ))}
+    </section>
+  );
+}
+```
+
+- Expose helper actions (`desk:approve`, `desk:reject`, `desk:assign`) for quick actions
+  triggered by the agent or UI buttons.
+- Always render empty-state UI so the surface stays useful before the agent streams
+  data.
 
 ## 3. Wire Human-in-the-Loop Controls
 
@@ -113,6 +168,69 @@ export function DeskShell({ children }: { children: React.ReactNode }) {
 
 - Wire the submit/cancel actions to the CopilotKit handler exactly as shown in the
   Playwright patterns (shared state test) to keep smoke coverage consistent.
+
+```tsx
+"use client";
+
+import Form from "@rjsf/core";
+import { JSONSchema7 } from "json-schema";
+import { useCoAgent, useCopilotAction } from "@copilotkit/react-core";
+
+type ApprovalModal = {
+  schema: JSONSchema7;
+  uiSchema?: Record<string, unknown>;
+  formData: Record<string, unknown>;
+  envelopeId: string;
+};
+
+export function ApprovalModalForm() {
+  const { state, setState } = useCoAgent<{ modal: ApprovalModal | null }>({
+    name: "approvals",
+    initialState: { modal: null },
+  });
+
+  const approve = useCopilotAction({
+    name: "approvals:approve",
+    parameters: [{ name: "envelopeId", type: "string", required: true }, { name: "formData", type: "object", required: true }],
+  });
+
+  if (!state.modal) {
+    return null;
+  }
+
+  return (
+    <Form
+      schema={state.modal.schema}
+      uiSchema={state.modal.uiSchema}
+      formData={state.modal.formData}
+      onChange={({ formData }) =>
+        setState((prev) => ({
+          ...prev,
+          modal: prev.modal ? { ...prev.modal, formData } : prev.modal,
+        }))
+      }
+      onSubmit={({ formData }) =>
+        approve({ envelopeId: state.modal!.envelopeId, formData })
+      }
+      onError={(errors) => console.warn("approval modal validation", errors)}
+    >
+      <div className="flex justify-end gap-2">
+        <button type="button" onClick={() => setState((prev) => ({ ...prev, modal: null }))}>
+          Cancel
+        </button>
+        <button type="submit" className="btn btn-primary">
+          Approve
+        </button>
+      </div>
+    </Form>
+  );
+}
+```
+
+- Derive optional `uiSchema` metadata from the catalog service so we can annotate fields
+  with helper text, icons, or scope warnings without patching the schema.
+- Store decision outcomes back in shared state (`approvals.history`) so the agent can
+  summarise them in transcripts and audit logs.
 
 ## 4. UX & Accessibility Checklist
 

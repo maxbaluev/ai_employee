@@ -7,7 +7,8 @@ from google.adk.agents.callback_context import CallbackContext
 from google.adk.models import LlmResponse
 from google.genai.types import Content, Part
 
-from agent.callbacks import before_model_modifier
+from agent.agents.blueprints import DeskBlueprint
+from agent.callbacks import build_before_model_modifier
 from agent.callbacks.guardrails import (
     GuardrailResult,
     enforce_quiet_hours,
@@ -16,6 +17,14 @@ from agent.callbacks.guardrails import (
     ensure_evidence_present,
     run_guardrails,
 )
+from agent.services import (
+    InMemoryCatalogService,
+    InMemoryObjectivesService,
+    InMemoryOutboxService,
+    StructlogAuditLogger,
+    ToolCatalogEntry,
+)
+from agent.services.settings import AppSettings
 
 
 def _fake_context() -> CallbackContext:
@@ -57,6 +66,7 @@ def test_individual_stubs_return_guardrail_results() -> None:
 
 
 def test_before_model_modifier_blocks_on_guardrail(monkeypatch) -> None:
+    callback = _build_before_callback()
     context = _fake_context()
     llm_request = SimpleNamespace(
         config=SimpleNamespace(
@@ -67,15 +77,16 @@ def test_before_model_modifier_blocks_on_guardrail(monkeypatch) -> None:
     blocked = GuardrailResult("quiet_hours", allowed=False, reason="quiet hours active")
     monkeypatch.setattr(
         "agent.callbacks.before.run_guardrails",
-        lambda _: (blocked,),
+        lambda *_, **__: (blocked,),
     )
 
-    response = before_model_modifier(context, llm_request)
+    response = callback(context, llm_request)
     assert isinstance(response, LlmResponse)
-    assert response.content.parts[0].text == "quiet hours active"
+    assert response.content.parts[0].text.startswith("Guardrail prevented")
 
 
 def test_before_model_modifier_appends_state() -> None:
+    callback = _build_before_callback()
     context = _fake_context()
     llm_request = SimpleNamespace(
         config=SimpleNamespace(
@@ -83,7 +94,47 @@ def test_before_model_modifier_appends_state() -> None:
         )
     )
 
-    response = before_model_modifier(context, llm_request)
+    response = callback(context, llm_request)
     assert response is None
-    # After running the callback, the state should be initialised.
-    assert context.state.get("proverbs") == []
+    assert "desk" in context.state
+    desk_state = context.state["desk"]
+    assert isinstance(desk_state, dict)
+    assert "queue" in desk_state
+
+
+def _build_before_callback():
+    settings = AppSettings()
+    blueprint = DeskBlueprint()
+    catalog = InMemoryCatalogService(
+        entries_by_tenant={
+            settings.tenant_id: (
+                ToolCatalogEntry(
+                    slug="GMAIL__drafts.create",
+                    name="Draft Email",
+                    description="Drafts an email",
+                    version="1.0",
+                    schema={
+                        "type": "object",
+                        "properties": {
+                            "to": {"type": "string"},
+                        },
+                        "required": ["to"],
+                    },
+                    required_scopes=["GMAIL.SMTP"],
+                    risk="medium",
+                ),
+            )
+        }
+    )
+    objectives = InMemoryObjectivesService(objectives_by_tenant={settings.tenant_id: ()})
+    audit_logger = StructlogAuditLogger()
+    outbox = InMemoryOutboxService()
+
+    return build_before_model_modifier(
+        blueprint=blueprint,
+        settings=settings,
+        catalog_service=catalog,
+        objectives_service=objectives,
+        audit_logger=audit_logger,
+        outbox_service=outbox,
+    )

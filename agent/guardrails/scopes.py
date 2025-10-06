@@ -24,22 +24,34 @@ def check(
     requested = _normalise(requested_scopes)
     enabled = _normalise(enabled_scopes)
 
+    metadata = {
+        "requestedScopes": sorted(requested),
+        "enabledScopes": sorted(enabled),
+    }
+
     if not requested:
         return GuardrailResult(
             "scope_validation",
             allowed=True,
             reason="no scopes requested; allowing",
+            metadata={**metadata, "missingScopes": []},
         )
 
     missing = sorted(requested - enabled)
     if missing:
         reason = "missing scopes: " + ", ".join(missing)
-        return GuardrailResult("scope_validation", allowed=False, reason=reason)
+        return GuardrailResult(
+            "scope_validation",
+            allowed=False,
+            reason=reason,
+            metadata={**metadata, "missingScopes": missing},
+        )
 
     return GuardrailResult(
         "scope_validation",
         allowed=True,
         reason="requested scopes satisfied",
+        metadata={**metadata, "missingScopes": []},
     )
 
 
@@ -56,4 +68,3 @@ def _normalise(scopes: Optional[Iterable[str]]) -> Set[str]:
             continue
         normalised.add(value.lower())
     return normalised
-

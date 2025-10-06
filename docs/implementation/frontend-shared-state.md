@@ -130,7 +130,10 @@ them from both the agent and UI layers to avoid drift.
         "required": ["allowed", "message"],
         "properties": {
           "allowed": { "type": "boolean" },
-          "message": { "type": "string" }
+          "message": { "type": "string" },
+          "configured": { "type": "boolean" },
+          "window": { "type": "string" },
+          "currentTime": { "type": "string" }
         }
       },
       "trust": {
@@ -139,15 +142,40 @@ them from both the agent and UI layers to avoid drift.
         "properties": {
           "allowed": { "type": "boolean" },
           "score": { "type": "number" },
-          "source": { "type": "string" }
+          "threshold": { "type": "number" },
+          "source": { "type": "string" },
+          "missingSignal": { "type": "boolean" },
+          "message": { "type": "string" }
+        }
+      },
+      "scopeValidation": {
+        "type": "object",
+        "required": ["allowed", "missingScopes", "requestedScopes", "enabledScopes"],
+        "properties": {
+          "allowed": { "type": "boolean" },
+          "missingScopes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "requestedScopes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "enabledScopes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "message": { "type": "string" }
         }
       },
       "evidence": {
         "type": "object",
-        "required": ["required"],
+        "required": ["required", "allowed", "missingEvidence"],
         "properties": {
           "required": { "type": "boolean" },
-          "missingEvidence": { "type": "array", "items": { "type": "string" } }
+          "allowed": { "type": "boolean" },
+          "missingEvidence": { "type": "array", "items": { "type": "string" } },
+          "message": { "type": "string" }
         }
       }
     }

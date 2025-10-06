@@ -10,7 +10,7 @@ vendor references stay aligned. Reference `libs_docs/` samples whenever noted.
 - [x] Document mise + uv bootstrap directly in `docs/getting-started/setup.md`; include
       `mise doctor` preflight and troubleshoot appendix. (`docs/getting-started/setup.md`,
       `docs/operations/run-and-observe.md`)
-- [ ] Follow-up: add Supabase credential bootstrap once persistence lands.
+- [x] Added Supabase credential bootstrap guidance. (`docs/getting-started/setup.md#supabase-credential-bootstrap`)
 
 ## 2. Architecture (Frontend · Agent · Composio · Data)
 
@@ -31,7 +31,7 @@ vendor references stay aligned. Reference `libs_docs/` samples whenever noted.
 
 ## 4. Data & Workers
 
-- [x] Check in Supabase migration scripts + seeds and document apply steps. (`docs/architecture/data-roadmap.md`, `db/migrations/001_init.sql`, `db/seeds/000_placeholder.sql`, `db/README.md`)
+- [x] Check in Supabase migration scripts + seeds and document apply steps. (`docs/architecture/data-roadmap.md`, `db/migrations/001_init.sql`, `db/seeds/000_demo_tenant.sql`, `db/README.md`)
 - [x] Define Supabase tables + Outbox worker operations (CLI, telemetry, health). (`docs/architecture/data-roadmap.md`, `docs/operations/runbooks/outbox-recovery.md`)
 - [x] Document DLQ replay process end-to-end including audit expectations. (`docs/operations/runbooks/outbox-recovery.md`, `docs/governance/security-and-guardrails.md`)
 - [ ] Follow-up: wire automated migration tooling (e.g., Supabase CLI or Sqitch) into CI/CD.

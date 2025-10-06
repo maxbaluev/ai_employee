@@ -1,24 +1,21 @@
 # Agent Control Plane Playbook
 
-**Status:** In progress · Demo Proverbs agent is deliberately temporary; production flow
-tracks the roadmap captured in `docs/`
+**Status:** Implemented (control plane agent with Supabase integrations) · In progress
+(multi-employee orchestration)
 
 ## What Exists Today
 
 - `agent/app.py` exposes a FastAPI surface using `ag_ui_adk.add_adk_fastapi_endpoint`,
   streaming AGUI events that CopilotKit consumes (`docs/architecture/overview.md`).
-- `agent/agents/proverbs.py` wires a single `google.adk.agents.LlmAgent` with placeholder
-  tools. Treat it as scaffolding only; new work should focus on the modular structure
-  described below (`docs/implementation/backend-callbacks.md`).
+- `agent/agents/control_plane.py` wires the `google.adk.agents.LlmAgent` with the desk
+  blueprint, guardrails, Supabase-backed catalog/objectives/outbox services, and
+  Composio tooling (in-memory test doubles remain available via dependency injection).
 - Settings already flow through `pydantic-settings` (`agent/services/settings.py`), so
   guardrails and Composio integration can inherit that contract.
 
 Imports mirror the upstream samples in `libs_docs/copilotkit_docs/adk/`: we import
 `CallbackContext`/`LlmResponse` directly and raise if `google-adk` is missing so errors
-surface immediately rather than being swallowed by optional typing fallbacks.
-
-> The Proverbs tool logic does **not** need to stay feature-complete. Prioritise the
-> modular architecture and safety controls that unlock the production agent.
+surface immediately rather than being swallowed by optional typing shims.
 
 ## Target Architecture
 

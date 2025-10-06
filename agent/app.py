@@ -4,13 +4,9 @@ from __future__ import annotations
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from ag_ui_adk import add_adk_fastapi_endpoint
 
-try:
-    from ag_ui_adk import add_adk_fastapi_endpoint
-except ImportError:  # pragma: no cover - handled in fallback healthz path
-    add_adk_fastapi_endpoint = None
-
-from .agents.proverbs import build_proverbs_adk_agent
+from .agents import build_control_plane_agent
 from .services.settings import get_settings
 
 
@@ -18,21 +14,17 @@ load_dotenv()
 
 settings = get_settings()
 
-app = FastAPI(title="ADK Middleware Proverbs Agent")
+app = FastAPI(title="AI Employee Control Plane")
 
-_adk_agent = None
-if add_adk_fastapi_endpoint is not None:
-    try:
-        _adk_agent = build_proverbs_adk_agent(settings=settings)
-    except RuntimeError:  # pragma: no cover - surfaced in environments without vendor SDK
-        _adk_agent = None
+adk_agent = build_control_plane_agent(settings=settings)
+add_adk_fastapi_endpoint(app, adk_agent, path="/")
 
-if add_adk_fastapi_endpoint is not None and _adk_agent is not None:
-    add_adk_fastapi_endpoint(app, _adk_agent, path="/")
-else:  # pragma: no cover - fallback for environments without AG UI bridge
-    @app.get("/healthz")
-    def healthz() -> dict[str, str]:
-        return {"status": "ok"}
+
+@app.get("/healthz")
+def healthz() -> dict[str, str]:
+    """Basic readiness probe for the control plane."""
+
+    return {"status": "ok"}
 
 
 def main() -> None:

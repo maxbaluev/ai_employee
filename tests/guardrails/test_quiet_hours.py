@@ -25,12 +25,15 @@ def test_quiet_hours_blocks_inside_window() -> None:
         _context(),
         quiet_window=window,
         clock=lambda: _clock(23),
-        fallback_reason=reason,
+        configuration_message=reason,
     )
 
     assert result.allowed is False
     assert result.reason is not None
     assert "Quiet hours" in result.reason
+    assert result.metadata is not None
+    assert result.metadata.get("configured") is True
+    assert "window" in result.metadata
 
 
 def test_quiet_hours_allows_outside_window() -> None:
@@ -39,12 +42,14 @@ def test_quiet_hours_allows_outside_window() -> None:
         _context(),
         quiet_window=window,
         clock=lambda: _clock(7),
-        fallback_reason=reason,
+        configuration_message=reason,
     )
 
     assert result.allowed is True
     assert result.reason is not None
     assert "Outside quiet hours" in result.reason
+    assert result.metadata is not None
+    assert result.metadata.get("configured") is True
 
 
 def test_quiet_hours_allows_when_not_configured() -> None:
@@ -53,11 +58,13 @@ def test_quiet_hours_allows_when_not_configured() -> None:
         _context(),
         quiet_window=window,
         clock=lambda: _clock(12),
-        fallback_reason=reason,
+        configuration_message=reason,
     )
 
     assert result.allowed is True
     assert (result.reason or "").startswith("quiet hours")
+    assert result.metadata is not None
+    assert result.metadata.get("configured") is False
 
 
 def test_quiet_hours_handles_invalid_configuration() -> None:
@@ -66,7 +73,7 @@ def test_quiet_hours_handles_invalid_configuration() -> None:
         _context(),
         quiet_window=window,
         clock=lambda: _clock(3),
-        fallback_reason=reason,
+        configuration_message=reason,
     )
 
     assert result.allowed is True

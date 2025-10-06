@@ -1,6 +1,6 @@
 # Composio Execution Layer
 
-**Status:** Planned (no production integration yet)
+**Status:** In progress (Supabase control plane + Outbox worker implemented)
 
 ADR-0001 locks the platform to Composio as the only mechanism for executing actions on
 third-party SaaS apps. This document provides the contract for implementing that
@@ -24,20 +24,20 @@ integration end-to-end.
 ## Proposed Flow
 
 ```
-FastAPI Catalog Service (planned)
+FastAPI Catalog Service (Supabase-backed)
  ├─ GET /tools → returns cached catalog entries per tenant
  ├─ POST /connected-accounts/initiate → returns OAuth URL
  └─ POST /connected-accounts/:id/enable|disable
 
 Scheduler (APScheduler)
- └─ Nightly job: composio.tools.get(...) → persist JSON schema + scopes in Supabase
+ └─ Nightly job: composio.tools.get(...) → persist JSON schema + scopes in Supabase (planned)
 
 Agent (google.adk)
  ├─ Discovers tool metadata from catalog
  ├─ Includes required scopes in proposals
  └─ Produces envelope → Outbox
 
-Outbox Worker (planned)
+Outbox Worker (`worker/outbox.py`)
  ├─ Pops envelope, checks guardrails (quiet hours, trust, DNC)
  ├─ Calls composio.tools.execute(user_id, tool_slug, args, connected_account_id)
  └─ Persists outcome + latency + conflict flags
