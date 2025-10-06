@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from ag_ui_adk import add_adk_fastapi_endpoint
 
 from .agents import build_control_plane_agent
+from .analytics import router as analytics_router
 from .services.settings import get_settings
 
 
@@ -18,6 +19,7 @@ app = FastAPI(title="AI Employee Control Plane")
 
 adk_agent = build_control_plane_agent(settings=settings)
 add_adk_fastapi_endpoint(app, adk_agent, path="/")
+app.include_router(analytics_router)
 
 
 @app.get("/healthz")

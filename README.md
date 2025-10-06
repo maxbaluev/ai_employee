@@ -39,7 +39,10 @@ echo 'GOOGLE_API_KEY=...' >> .env
 # 3. Run the local loop (Next.js + ADK agent)
 pnpm dev              # or `mise run dev`
 
-# 4. Visit http://localhost:3000 and curl http://localhost:8000/healthz
+# 4. Visit http://localhost:3000 (workspace shell) and curl http://localhost:8000/healthz
+
+# 5. (Optional) Run the Outbox worker against Supabase
+uv run python -m worker.outbox start
 ```
 
 The `scripts/` folder is now uv-aware:
@@ -48,6 +51,16 @@ The `scripts/` folder is now uv-aware:
   virtual environment.
 - `scripts/setup-agent.*` simply calls `uv sync --extra test` for parity with the
   package.json `install:agent` script.
+
+## Workspace Surfaces
+
+The `/` workspace is built from shared state emitted by the agent:
+
+- `/` – overview tiles summarising queue, approvals, guardrail blocks.
+- `/desk` – live queue with evidence, quick status toggles, and guardrail banners.
+- `/approvals` – schema-driven approval forms pulled from `tool_catalog.schema`.
+
+All routes live under `src/app/(workspace)/` and react instantly to `StateDeltaEvent`s.
 
 ## Workflow Scripts
 
@@ -79,8 +92,16 @@ Authoritative system documentation lives in `docs/`:
 - `docs/implementation/` – task-focused how-tos for callbacks, shared state, schemas, and
   UI surfaces.
 - `docs/operations/` – deployment, observability, and incident runbooks.
+- `docs/prd/` – product requirements snapshots for the control plane.
+- `docs/use_cases/` – operator workflows anchored to the current implementation.
 - `docs/governance/` – ownership, security, and evergreen processes.
 - `docs/references/` – roadmap, glossary, product intent, requirements, observability.
+
+### Analytics & Operations Quick Links
+
+- `GET /analytics/outbox/status?tenant=TENANT_ID` – queue and DLQ counts sourced from Supabase.
+- `GET /analytics/guardrails/recent?tenant=TENANT_ID&limit=20` – recent guardrail audit entries.
+- `GET /analytics/cron/jobs?limit=20` – Supabase Cron job history for sync jobs.
 
 Each document declares `Status:` so you know which behaviours are live. Keep the docs in
 lockstep with the code; reviewers are expected to block drift.

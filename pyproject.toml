@@ -36,6 +36,8 @@ dependencies = [
   # Logging
   "structlog~=25.4.0",
 
+  # Observability
+
   # Agent runtime + Google APIs
   "google-adk~=1.15.1",             # Outcome Planner, Drafter, Compliance, QA (typed)
   "ag-ui-adk~=0.3.1",

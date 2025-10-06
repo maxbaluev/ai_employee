@@ -1,168 +1,86 @@
-# Agent Control Plane Playbook
+# AGENTS.md · AI Employee Control Plane (Ready to Run)
 
-**Status:** Updated October 6, 2025 · Control plane (FastAPI + Supabase integrations) is live · Multi-employee orchestration in progress
+Status: Updated October 6, 2025 · Phases 0–5 complete · Supabase-only ops
 
-This file is the agent-facing control tower for the repository. Pair it with `README.md`
-(human onboarding) and `docs/README.md` (documentation map) so code, docs, and
-guardrails move together.
-
----
+This file is a quick, agent‑focused guide to build, run, test, and extend the app.
+For product docs and architecture, see docs/.
 
 ## Setup Commands
-- `mise install` – install pinned runtimes (Node 22, Python 3.13)
-- `pnpm install` – installs JS deps **and** runs `uv sync --extra test`
-- `pnpm dev` – runs Next.js UI (`dev:ui`) + agent (`dev:agent`) concurrently
-- `pnpm run dev:agent` / `uv run python -m agent` – FastAPI + ADK in isolation
-- `pnpm run dev:ui` – Next.js shell only (Turbopack)
-- `pnpm lint` · `pnpm test` – lint + contract/unit tests before any PR
-- `pnpm build && pnpm start` – production build smoke
+- Install toolchain and deps
+  - `mise install` (Node 22, Python 3.13)
+  - `pnpm install` (runs `uv sync --extra test`)
+- Configure env: `cp .env.example .env` then fill keys (at minimum `GOOGLE_API_KEY`; add Supabase to run the worker/analytics)
+- Start dev: `pnpm dev` (Next.js UI + FastAPI agent)
 
-## Code Style & Tooling
-- **TypeScript**: strict mode (`tsconfig.json`); lint with Next.js config (`eslint.config.mjs`);
-  Prettier defaults favour single quotes and trailing commas.
-- **Python**: compose pure functions + pydantic models; keep guardrails side-effect free
-  and covered by pytest (`tests/guardrails/`).
-- Use `structlog` for agent logging; redact secrets before logging.
-- Scripts under `scripts/` and `mise run` are uv-aware—avoid invoking the interpreter directly.
+## Run & Operate
+- UI only: `pnpm run dev:ui`
+- Agent only: `pnpm run dev:agent` (FastAPI at http://localhost:8000)
+- Health check: `curl http://localhost:8000/healthz`
+- Outbox worker (requires Supabase):
+  - `uv run python -m worker.outbox start`
+  - `uv run python -m worker.outbox status --tenant <TENANT_ID>`
+  - `uv run python -m worker.outbox drain --tenant <TENANT_ID> --limit 20`
+  - `uv run python -m worker.outbox retry-dlq --tenant <TENANT_ID> --envelope <ENV_ID>`
+- Analytics endpoints (Supabase‑backed, no external telemetry):
+  - `GET /analytics/outbox/status?tenant=<id>` → queue + DLQ counts
+  - `GET /analytics/guardrails/recent?tenant=<id>&limit=20` → latest guardrail events
+  - `GET /analytics/cron/jobs?limit=20` → cron runs
 
-## Testing Checklist
-- `pnpm test` – shared Jest/Vitest suites
-- `pnpm lint` – Next.js ESLint rules (strict)
-- `uv run python -m pytest` – targeted Python suites (`tests/`)
-- `pnpm test --filter agent` – run only agent-specific checks when needed
-- Playwright smoke patterns live in `libs_docs/copilotkit_examples/tests`
-- Re-run migrations after schema tweaks: `pnpm install:agent` → `uv run python -m agent`
+## Testing & Linting
+- JS tests: `pnpm test`
+- Python tests: `uv run python -m pytest`
+- Lint: `pnpm lint` (Next.js ESLint rules)
 
-## Key Docs & Directories
-- `docs/getting-started/core-concepts.md` – end-to-end flow (UI ↔ agent ↔ Composio)
-- `docs/architecture/*` – component diagrams, data roadmap, frontend layout
-- `docs/implementation/*` – guardrails, callbacks, shared state, UI surfaces
-- `docs/operations/*` – deployment, observability, runbooks
-- `docs/governance/*` – security, approvals, doc ownership
-- `docs/todo.md` – layered backlog mirroring the phases below
+## Code Style
+- TypeScript: strict mode; Next.js ESLint config; Prettier (single quotes, trailing commas)
+- Python: pydantic models + pure guardrail modules; avoid side effects in callbacks/services
+- Logging: `structlog`; scrub secrets before logging
 
-## Current Implementation Snapshot
-- `agent/app.py` exposes FastAPI via `ag_ui_adk.add_adk_fastapi_endpoint` for AGUI streams → CopilotKit (`src/app/api/copilotkit/route.ts`).
-- `agent/agents/control_plane.py` composes `google.adk.agents.LlmAgent`, desk blueprint, guardrails, Supabase-backed services, and Composio tooling (dependency injection keeps in-memory doubles viable).
-- `agent/services/settings.py` (pydantic-settings) feeds guardrails, Composio, and Supabase configs with env parity across environments.
-- `agent/services/catalog_sync.py` runs the Composio → Supabase catalog sync (Supabase Cron entrypoint).
-- In-memory fallbacks exist for catalog/objectives/outbox; Supabase implementations land in Phases 2 and 4.
-- Worker CLI (`worker/outbox.py`) orchestrates Supabase-backed queue execution with retries.
-- Desk and Approvals surfaces live under `src/app/(workspace)/*` and render shared state emitted by the agent.
+## Project Map
+- Agent runtime
+  - `agent/app.py` – FastAPI app; mounts ADK agent; healthz; analytics router
+  - `agent/agents/` – `control_plane.py` factory + `coordinator.py` multipliers
+  - `agent/callbacks/` – before/after modifiers; guardrail glue
+  - `agent/guardrails/` – quiet hours, trust, scopes, evidence (pure `check(...)`)
+  - `agent/services/` – settings, catalog, outbox, objectives, audit, state helpers
+  - `agent/schemas/envelope.py` – envelope DTO + shared‑state helpers
+- Worker
+  - `worker/outbox.py` – Supabase‑backed queue executor with retries/DLQ
+- Frontend
+  - `src/app/(workspace)/page.tsx` – overview
+  - `src/app/(workspace)/desk/page.tsx` – live queue (shared state)
+  - `src/app/(workspace)/approvals/page.tsx` – schema‑driven approvals
+- Docs
+  - `docs/architecture/*` – control plane, frontend, data roadmap
+  - `docs/operations/*` – runbooks + Supabase dashboards
+  - `docs/prd/*` – product requirements; `docs/use_cases/*` – operator workflows
 
-## Target Architecture
-```
-FastAPI (ag_ui_adk)
- ├─ / (AGUI stream)            ↔ CopilotKit runtime (`src/app/api/copilotkit/route.ts`)
- ├─ /healthz                   ↔ Deployment probes
- └─ (roadmap) /metrics         ↔ Observability stack
+## Guardrails & Safety
+- All guardrails are pure functions (`check(...) -> GuardrailResult`) and run in
+  `build_before_model_modifier` prior to model calls.
+- On block: short‑circuit with a refusal, log via audit service, and set
+  `callback_context.end_invocation = True`.
+- Shared state mutations (desk/approvals/guardrails/outbox) reassign top‑level keys so
+  AGUI emits JSON Patch deltas; UI updates in real time.
+- Observability for Phase 5 stays inside Supabase (no Prometheus). Use analytics routes
+  and saved SQL/dashboard widgets in Supabase for ops.
 
-Agent Package (`agent/`)
- ├─ agents/
- │   ├─ control_plane.py       # desk orchestration
- │   └─ coordinator.py         # shared multi-employee orchestration scaffold
- ├─ callbacks/
- │   ├─ before.py              # prompt & guardrail synthesis
- │   └─ after.py               # plan execution + summaries
- ├─ guardrails/
- │   ├─ quiet_hours.py
- │   ├─ trust.py
- │   └─ scopes.py
- ├─ services/
- │   ├─ catalog.py             # Supabase-backed metadata (Phase 2)
- │   ├─ objectives.py
- │   ├─ outbox.py              # enqueue envelopes (Phase 4 persistence)
- │   └─ audit.py               # structlog + Supabase writes
- └─ schemas/
-     └─ envelope.py            # shared with UI + workers
+## Environment Keys (excerpt)
+- `GOOGLE_API_KEY` – model access for ADK agent
+- `COMPOSIO_API_KEY` (+ optional `COMPOSIO_CLIENT_ID/SECRET/REDIRECT_URL`)
+- `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY` (required for worker/analytics)
+- `COMPOSIO_DEFAULT_TOOLKITS`, `COMPOSIO_DEFAULT_SCOPES` (optional defaults)
 
-Worker (roadmap)
- └─ worker/outbox.py           # executes envelopes via Composio (Tenacity retries)
-```
+## PR Guidelines (for agents)
+- Keep changes surgical and aligned with the structure above
+- Update tests/docs with behaviour changes; run `pnpm test` and `pytest` before finishing
+- Don’t introduce new external telemetry; Phase 5 uses Supabase‑only analytics
 
-## Multi-Phase Delivery Plan
-Each phase references the authoritative items in `docs/todo.md`. Legend: ✅ done · 🔄 in progress · 📋 planned.
+## Troubleshooting
+- UI connected but no state: verify `NEXT_PUBLIC_COPILOTKIT_URL=/api/copilotkit` and that
+  the agent is serving on port 8000
+- Empty catalog: run the catalog sync job or ensure `COMPOSIO_API_KEY` is set
+- Worker idle: verify Supabase keys and that `outbox` has `status='pending'` rows
 
-### Phase 0 · Foundation & Documentation Review ✅ (complete)
-- Tooling bootstrap documented (`docs/getting-started/setup.md`).
-- System overview synchronised (`docs/getting-started/core-concepts.md`, `docs/architecture/overview.md`).
-- Supabase schema + seeds landed (`db/migrations/001_init.sql`, `db/seeds/000_demo_tenant.sql`).
-- Shared-state schemas published (`docs/schemas/*`, `docs/implementation/frontend-shared-state.md`).
-- Observability contracts defined (`docs/operations/run-and-observe.md`, `docs/references/observability.md`).
-
-### Phase 1 · Control Plane Modularisation ✅ (complete)
-
-**Goal** Harden callback + guardrail orchestration and service boundaries so the desk blueprint stays stable while we layer in multi-employee coordination.
-
-**Baseline**
-- Guardrail modules (`agent/guardrails/*.py`) are wired through `agent/callbacks/guardrails.py` and exercised in `tests/guardrails/`; each exposes a pure `check(...) -> GuardrailResult` consumed by `build_before_model_modifier` so refusals short-circuit safely.
-- Callback builders in `agent/callbacks/before.py` and `agent/callbacks/after.py` own prompt enrichment, shared-state seeding, envelope enqueueing, and deterministic use of `callback_context.end_invocation` as outlined in `docs/implementation/backend-callbacks.md`.
-- Service shims in `agent/services/catalog.py`, `agent/services/objectives.py`, `agent/services/outbox.py`, and `agent/services/audit.py` mirror the Supabase contracts documented in `docs/architecture/agent-control-plane.md`, keeping tests and local runs Supabase-free.
-- `agent/agents/coordinator.py` now composes shared services, callbacks, and blueprints so surface-specific factories (e.g. `control_plane.py`) stay thin while enabling multi-employee orchestration.
-
-**In Flight**
-- Prep Supabase-backed catalog/objectives handoff for Phase 2 while expanding coordinator coverage with integration tests.
-
-**Guardrails**
-- Adhere to the matrix in `docs/governance/security-and-guardrails.md`: log every guardrail decision via `StructlogAuditLogger`, reuse the refusal tone guide, and block runs by setting `callback_context.end_invocation = True`.
-- New guardrails land as pure modules registered through `agent/callbacks/guardrails.py`, paired with pytest coverage in `tests/guardrails/` to keep the enforcement layer deterministic and dependency-injected.
-
-**References**
-- `docs/architecture/agent-control-plane.md`
-- `docs/implementation/backend-callbacks.md`
-- `docs/governance/security-and-guardrails.md`
-- `docs/todo.md`
-
-### Phase 2 · Composio Integration & Catalog ✅ (complete)
-Goals: persist the tool catalog, manage OAuth, execute envelopes.
-- [x] Supabase-backed `CatalogService` replacing the shim (`agent/services/catalog.py`) with a reusable sync job (`agent/services/catalog_sync.py`).
-- [x] Embed catalog → envelope → Outbox sequence diagram (`docs/architecture/composio-execution.md`).
-- [x] Wire Composio OAuth env vars + scope handling (`agent/services/settings.py`, `docs/implementation/composio-tooling.md`).
-- [x] Schedule nightly catalog sync with telemetry (Supabase Cron + Edge Functions + Tenacity for retries) documented in `docs/operations/run-and-observe.md`.
-Depends on Phase 1 service boundaries.
-
-### Phase 3 · Approvals & Frontend State ✅ (complete)
-Goals: schema-driven approval surfaces with CopilotKit parity.
-- [x] Document Desk/Approvals layout & state contracts (`docs/architecture/frontend.md`).
-- [x] Scaffold approval forms from JSON Schema (`docs/implementation/ui-surfaces.md`, `docs/schemas/approval-modal.json`).
-- [x] Emit `StateDeltaEvent`s for agent-driven mutations (`agent/services/state.py`, `agent/agents/control_plane.py`).
-- [x] Add Playwright coverage patterns for sidebar boot, desk render, approval submit/cancel, guardrail banner (`libs_docs/copilotkit_examples/tests`).
-Requires Phase 2 catalog persistence for schema hydration.
-
-### Phase 4 · Data Persistence & Outbox Worker ✅ (complete)
-Goals: replace in-memory services with Supabase + ship the Outbox executor.
-- [x] Baseline migrations + seeds committed (`db/migrations/001_init.sql`, `db/seeds/000_demo_tenant.sql`).
-- [x] Implement Supabase-backed Outbox service + retry semantics (`agent/services/outbox.py`, `worker/outbox.py`).
-- [x] Document DLQ replay flow end-to-end (`docs/operations/runbooks/outbox-recovery.md`).
-- [x] Add ERD + migration conventions (`docs/architecture/data-roadmap.md`).
-Depends on Phase 2 envelope contracts.
-
-### Phase 5 · Observability & Operations 📋
-Goals: production telemetry, alerts, and runbooks.
-- [ ] Expose `/metrics` FastAPI route + integrate collectors (`docs/operations/run-and-observe.md`).
-- [ ] Fill observability dashboard placeholders with PromQL queries (`docs/references/observability.md`).
-- [x] Expand incident runbooks with real postmortems + comms templates (`docs/operations/runbooks/`).
-Requires Phase 4 worker telemetry to be emitting.
-
-### Phase 6 · Governance & Documentation Hygiene ✅ (ongoing)
-Goals: keep docs evergreen and guardrails enforced.
-- [x] Doc ownership matrix + audit cadence defined (`docs/governance/ownership-and-evergreen.md`).
-- [x] Guardrail PR checklist published (`docs/governance/security-and-guardrails.md`).
-- [ ] Extend CONTRIBUTING/PR templates with TODO references once those files exist.
-Runs alongside every phase; audit quarterly.
-
----
-
-## Operational Guardrails & Safety
-- Guardrail modules stay pure; inject via `before_model`/`after_model` callbacks. Cover quiet hours, trust, scopes, evidence requirements.
-- Approval flows emit structured audit events + shared-state deltas (`docs/implementation/frontend-shared-state.md`).
-- Use `structlog` for tenant + envelope logging; scrub secrets; persist audit breadcrumbs in Supabase.
-- Short-circuit demo runs with `callback_context.end_invocation = True` (per ADK quickstarts).
-
-## Handy References
-- `docs/todo.md` – single source of remaining work mapped to the phases above.
-- `libs_docs/adk/full_llm_docs.txt` – callback + multi-agent patterns.
-- `libs_docs/composio_next/python/providers/google_adk/google_adk_demo.py` – Composio tool bridging reference.
-- `libs_docs/copilotkit_docs/adk/` – shared state + human-in-the-loop flows for UI parity.
-
-Keep this playbook current: update it whenever behaviour changes ship or documentation status flips.
+For deeper context, start with `docs/getting-started/core-concepts.md` and
+`docs/architecture/agent-control-plane.md`.

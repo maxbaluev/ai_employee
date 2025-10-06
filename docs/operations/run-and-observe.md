@@ -11,53 +11,51 @@ This guide outlines the operational baseline expected for every environment.
 - Redact secrets before logging (see `docs/governance/security-and-guardrails.md`).
 - Forward logs to your chosen aggregator (e.g. Loki, Datadog) in production.
 
-## Metrics
+## Operational Dashboards
 
-Expose Prometheus-compatible metrics from the agent process and scrape them via Prometheus:
+Rely on Supabase as the system of record for queue and audit data—no external telemetry
+stack is required for Phase 5.
 
-1. **Instrument FastAPI** using `prometheus_client` and Starlette middleware.
+1. **Outbox status** – create a Supabase saved SQL snippet:
 
-   ```python
-   # agent/app.py (excerpt)
-   from prometheus_client import Counter, Gauge, Histogram, generate_latest
-   from starlette.middleware import Middleware
-   from starlette_exporter import PrometheusMiddleware
-
-   copilot_requests_total = Counter(
-       "copilotkit_requests_total", "Total AGUI requests", ["agent", "outcome"]
-   )
-   composio_latency_seconds = Histogram(
-       "composio_execution_latency_seconds", "Composio execution latency", ["tool", "status"]
-   )
-   outbox_queue_size = Gauge("outbox_queue_size", "Pending envelopes", ["tenant"])
-   cron_job_runs_total = Counter(
-       "cron_job_runs_total", "Supabase Cron job runs", ["job_name", "status"]
-   )
-
-   app.add_middleware(PrometheusMiddleware)
-
-   @app.get("/metrics")
-   async def metrics():
-       return Response(generate_latest(), media_type="text/plain; version=0.0.4")
+   ```sql
+   select status, count(*)
+   from outbox
+   where tenant_id = :tenant_id
+   group by status
+   order by status;
    ```
 
-2. **Configure scraping** using Prometheus or an OpenTelemetry Collector with a
-   Prometheus receiver. The canonical sample lives in
-   `docs/references/observability.md`.
+   Visualise it as a bar chart to spot stalled envelopes.
 
-| Metric | Type | Labels |
-|--------|------|--------|
-| `copilotkit_requests_total` | Counter | `agent`, `outcome` |
-| `composio_execution_latency_seconds` | Histogram | `tool`, `status` |
-| `outbox_queue_size` | Gauge | `tenant` |
-| `cron_job_runs_total` | Counter | `job_name`, `status` |
-| `outbox_processed_total` | Counter | `tenant`, `status=success|retry|failed` |
-| `outbox_dlq_size` | Gauge | `tenant` |
+2. **DLQ backlog** – `select count(*) from outbox_dlq where tenant_id = :tenant_id;`
+   Pair this with the runbook in `docs/operations/runbooks/outbox-recovery.md`.
 
-Update dashboards and alerts whenever additional labels are added.
+3. **Guardrail activity** – query the audit log: `select guardrail, allowed, reason,
+   created_at from audit_log where actor_type = 'agent' order by created_at desc limit 50;`
 
-For the canonical metric catalogue, dashboard outlines, and alert expressions, see
-`docs/references/observability.md`.
+4. **Cron health** – use Supabase's Cron dashboard or SQL:
+
+   ```sql
+   select job_name, status, last_run, last_success
+   from cron.job_run_details
+   order by last_run desc
+   limit 20;
+   ```
+
+Pin these queries to a Supabase dashboard or embed them in the internal admin panel so
+operators can monitor the system without leaving the managed stack.
+
+## Agent Analytics API
+
+The control plane exposes lightweight helper routes for Ops tooling:
+
+- `GET /analytics/outbox/status?tenant=<id>` – returns status counts and DLQ size.
+- `GET /analytics/guardrails/recent?tenant=<id>&limit=20` – latest guardrail audit rows.
+- `GET /analytics/cron/jobs?limit=20` – recent Supabase Cron executions.
+
+Use these endpoints from internal dashboards or scripts when you need quick snapshots
+without direct SQL access.
 
 ## Tracing
 

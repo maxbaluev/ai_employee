@@ -94,13 +94,13 @@ authoritative map when adding migrations or debugging Supabase data flows.
 
 ## Observability Hooks
 
-- Metrics (see `docs/references/observability.md`):
-  - `outbox_queue_size{tenant}` gauge derived from `outbox` pending count.
-  - `outbox_dlq_size{tenant}` gauge derived from `outbox_dlq`.
-  - `outbox_processed_total{status}` counter incremented by the worker.
-- Logging: `StructlogAuditLogger` records guardrail decisions and envelope outcomes with
-  tenant and envelope identifiers.
-- DLQ Alerts: `outbox_dlq_size` > 0 for 5 minutes triggers the recovery runbook.
+- **Supabase dashboards** – build charts directly from `outbox`, `outbox_dlq`, and
+  `audit_log` using the SQL snippets in `docs/operations/run-and-observe.md`.
+- **Logging** – `StructlogAuditLogger` records guardrail decisions and envelope outcomes
+  with tenant and envelope identifiers. Persisted in `audit_log` for review.
+- **DLQ alerts** – schedule a Supabase cron job or Edge Function to poll
+  `select count(*) from outbox_dlq` and notify on-call channels when the count rises
+  above zero for multiple intervals.
 
 Keep this document updated whenever migrations or new tables land. Link architectural
 decisions (ADRs) when introducing significant persistence changes.
