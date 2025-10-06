@@ -25,7 +25,7 @@ Composio
 
 Supabase/Postgres
  ├─ Catalog + connected accounts + tasks + audit log (Supabase services)
- └─ Driven by APScheduler jobs (planned) + Outbox worker (`python -m worker.outbox start`)
+ └─ Driven by Supabase Cron (pg_cron) recurring jobs + Outbox worker (`python -m worker.outbox start`)
 ```
 
 Each component is elaborated in the dedicated sub-pages:

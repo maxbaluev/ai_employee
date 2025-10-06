@@ -29,8 +29,11 @@ FastAPI Catalog Service (Supabase-backed)
  ├─ POST /connected-accounts/initiate → returns OAuth URL
  └─ POST /connected-accounts/:id/enable|disable
 
-Scheduler (APScheduler)
- └─ Nightly job: composio.tools.get(...) → persist JSON schema + scopes in Supabase (planned)
+Supabase Cron (recurring jobs)
+ └─ Nightly job: composio.tools.get(...) → persist JSON schema + scopes in Supabase
+    Configure via `cron.schedule()` to invoke an Edge Function that runs the catalog sync.
+    All recurring jobs managed via Supabase dashboard (Integrations → Cron) or SQL.
+    Track cron definitions in `docs/operations/run-and-observe.md`.
 
 Agent (google.adk)
  ├─ Discovers tool metadata from catalog
@@ -73,6 +76,40 @@ sequenceDiagram
     Agent-->>UI: Surface execution outcome
 ```
 
+## AI-Enhanced Execution Context
+
+Supabase's built-in AI capabilities enable intelligent context injection and evidence
+retrieval before tool execution:
+
+1. **Semantic evidence retrieval** – before executing a tool, query `evidence_embeddings`
+   using vector similarity to inject relevant historical context, past outcomes, or
+   related signals into the agent prompt.
+2. **Embedding tool outputs** – after successful execution, generate embeddings for tool
+   outputs and persist them in `evidence_embeddings` for future semantic search.
+3. **Smart retry logic** – use embedding-based similarity to identify past failures with
+   similar contexts and adjust retry strategies accordingly.
+4. **Catalog augmentation** – store tool descriptions as embeddings to enable semantic
+   tool discovery (e.g., "find a tool that sends notifications").
+
+Edge Functions with the built-in `gte-small` model can generate embeddings synchronously
+without external API calls, keeping latency low and reducing dependencies. Reference
+`libs_docs/supabase/llms_docs.txt` (lines 48117–48230) for implementation patterns.
+
+### Supabase Integration Summary
+
+- **Vector store** – persist execution metadata in `evidence_embeddings` using pgvector;
+  query prior to execution to augment prompts.
+- **Realtime** – publish envelope status changes to `outbox:tenant_id` so the frontend
+  can reflect in-flight executions instantly.
+- **REST/RPC** – expose a read-only REST view (`pending_outbox_view`) that filters by
+  tenant. The UI and external observers can introspect queue state without touching the
+  primary worker database connection.
+- **Edge Functions** – use Edge Functions for Composio webhooks (connected account
+  status) and to mediate catalog sync tasks triggered by Supabase Cron.
+- **Storage** – upload large tool responses or evidence artifacts to Supabase Storage and
+  link them from `audit_log.payload`. This avoids bloating the Postgres row size while
+  keeping artefacts auditable.
+
 ## Implementation Checklist
 
 1. **Client bootstrap** – wrap `Composio(provider=GoogleAdkProvider())` in a singleton
@@ -94,7 +131,10 @@ sequenceDiagram
    should mark the envelope as `conflict` but not retry per Composio guidance.
 5. **Audit trail** – log every attempt with request/response payload (PII scrubbed) in
    the audit table. Surface the latest status in the Activity timeline.
-6. **Safety gates** – enforce quiet hours, autonomy thresholds, and scope validation
+6. **REST exposure** – create PostgREST views for `outbox_pending`, `outbox_history`, and
+   `catalog_tools` with RLS policies that scope data per tenant. Document which views the
+   UI consumes so on-call engineers understand external dependencies.
+7. **Safety gates** – enforce quiet hours, autonomy thresholds, and scope validation
    before executing. These align with `docs/governance/security-and-guardrails.md`.
 
 ### Approval Flow Contract

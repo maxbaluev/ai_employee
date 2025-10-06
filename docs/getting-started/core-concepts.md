@@ -42,8 +42,9 @@ pieces fit together today and which extensions are coming next.
 
 ## 4. Data Plane & Control Services (Planned)
 
-- `pyproject.toml` lists Supabase, APScheduler, Tenacity, and structlog dependencies, but
-  there are no modules using them yet.
+- `pyproject.toml` lists Supabase, Tenacity, and structlog dependencies, but there are no
+  modules using them yet. Recurring jobs will be handled by Supabase Cron (pg_cron
+  extension) rather than an in-process scheduler.
 - Roadmap items (catalog persistence, Outbox worker, audit log) are documented in
   `docs/architecture/data-roadmap.md`. Treat those sections as the contract for future
   work.

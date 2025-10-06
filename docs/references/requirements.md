@@ -10,7 +10,7 @@ progress in Jira/Linear and update the status column as features land.
 | FR-001 | Capture objectives (metric, target, horizon) before plans run. | Supabase tables, REST API | Planned |
 | FR-002 | Configure guardrails (quiet hours, allowed toolkits, tone). | Supabase, guardrail callbacks | Planned |
 | FR-003 | Manage Composio connected accounts lifecycle. | Composio SDK, catalog service | Planned |
-| FR-010 | Warm scan after connecting; surface evidence cards. | Scheduler, catalog, UI surfaces | Planned |
+| FR-010 | Warm scan after connecting; surface evidence cards. | Supabase Cron/Edge Functions, catalog, UI surfaces | Planned |
 | FR-012 | Plan assembly creates envelopes with tool slug, args, evidence. | Agent refactor, catalog metadata | In progress |
 | FR-020 | Schema-driven edits enforced client + server side. | JSON Schema renderer, validation service | Planned |
 | FR-022 | Outbox executes envelopes with retries + DLQ. | Worker, Supabase, Tenacity | Planned |

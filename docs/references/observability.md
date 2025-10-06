@@ -42,7 +42,7 @@ and the linked runbooks.
   | `outbox_processed_total` | Counter | `tenant`, `status` | Success/retry/failure envelope counts. |
   | `outbox_queue_size` | Gauge | `tenant` | Depth of ready envelopes. |
   | `outbox_dlq_size` | Gauge | `tenant` | Dead-letter backlog. |
-  | `scheduler_runs_total` | Counter | `job`, `status` | Autonomy + quiet-hour sweeps. |
+  | `cron_job_runs_total` | Counter | `job_name`, `status` | Supabase Cron job execution tracking (catalog sync, trickle refresh, embeddings). |
 
 - **Dashboards:**
   - **Control Plane Overview:** request volume, latency P95, guardrail blocks by type.

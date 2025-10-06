@@ -30,8 +30,8 @@ Expose Prometheus-compatible metrics from the agent process and scrape them via 
        "composio_execution_latency_seconds", "Composio execution latency", ["tool", "status"]
    )
    outbox_queue_size = Gauge("outbox_queue_size", "Pending envelopes", ["tenant"])
-   scheduler_runs_total = Counter(
-       "scheduler_runs_total", "Scheduler runs", ["job", "status"]
+   cron_job_runs_total = Counter(
+       "cron_job_runs_total", "Supabase Cron job runs", ["job_name", "status"]
    )
 
    app.add_middleware(PrometheusMiddleware)
@@ -50,7 +50,7 @@ Expose Prometheus-compatible metrics from the agent process and scrape them via 
 | `copilotkit_requests_total` | Counter | `agent`, `outcome` |
 | `composio_execution_latency_seconds` | Histogram | `tool`, `status` |
 | `outbox_queue_size` | Gauge | `tenant` |
-| `scheduler_runs_total` | Counter | `job`, `status` |
+| `cron_job_runs_total` | Counter | `job_name`, `status` |
 | `outbox_processed_total` | Counter | `tenant`, `status=success|retry|failed` |
 | `outbox_dlq_size` | Gauge | `tenant` |
 
@@ -67,11 +67,47 @@ For the canonical metric catalogue, dashboard outlines, and alert expressions, s
 - Link traces to metrics using consistent `service.name` and span attributes
   (`tenant`, `tool`).
 
+## Supabase Cron Jobs
+
+All recurring scheduled workloads use Supabase Cron instead of in-process schedulers. This
+ensures schedules survive agent restarts and scale independently.
+
+### Managing Cron Jobs
+
+- **Dashboard**: Navigate to **Integrations → Cron** in the Supabase dashboard to view,
+  pause, or delete jobs.
+- **SQL**: Use `cron.schedule()` to create jobs and `cron.unschedule()` to remove them:
+  ```sql
+  -- Schedule a nightly catalog sync
+  SELECT cron.schedule(
+    'catalog-sync-nightly',
+    '0 2 * * *',  -- 2 AM daily
+    $$SELECT net.http_post(
+      url := 'https://your-project.supabase.co/functions/v1/catalog-sync',
+      headers := '{"Authorization": "Bearer ' || current_setting('app.service_role_key') || '"}'::jsonb
+    )$$
+  );
+  ```
+- **Logs**: All runs are logged in `cron.job_run_details` with status, start time, and
+  error messages.
+
+### Registered Jobs
+
+| Job Name | Schedule | Purpose | Edge Function |
+|----------|----------|---------|---------------|
+| `catalog-sync-nightly` | Daily at 2 AM | Sync Composio tool catalog | `/functions/v1/catalog-sync` |
+| `trickle-refresh-hourly` | Every hour | Refresh toolkit signals | `/functions/v1/trickle-refresh` |
+| `embedding-reindex-nightly` | Daily at 3 AM | Recalculate embeddings | `/functions/v1/embedding-reindex` |
+
+Update this table whenever new jobs are added.
+
 ## Health Checks
 
 - UI: rely on Next.js built-in health endpoint (`/`).
 - Agent: expose `/healthz` returning success if the ADK runner can create a session and
   (once implemented) connect to Supabase/Composio.
+- Supabase Cron: monitor `cron.job_run_details` for failed runs and `cron_job_runs_total`
+  metric for trends.
 
 ## Alerting Baseline
 
@@ -79,7 +115,7 @@ For the canonical metric catalogue, dashboard outlines, and alert expressions, s
 |----------|-----------|----------------|
 | Composio outage | `copilotkit_requests_total{outcome="error"}` and `composio_execution_latency_seconds` > SLO | Follow `docs/operations/runbooks/composio-outage.md` |
 | Outbox DLQ growth | `outbox_dlq_size{tenant}` > 0 for 5 min | Follow `docs/operations/runbooks/outbox-recovery.md` |
-| Scheduler failure | `scheduler_runs_total{status="failure"}` increases | Disable autonomous runs, notify SRE; see `docs/operations/runbooks/scheduler.md` (TBD) |
+| Cron job failure | `cron_job_runs_total{status="failure"}` increases or jobs missing from `cron.job_run_details` | Check Supabase dashboard (Integrations → Cron), verify Edge Function health, review `cron.job_run_details` logs |
 
 ## Local Troubleshooting
 

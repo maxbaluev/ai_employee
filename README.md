@@ -68,7 +68,10 @@ Authoritative system documentation lives in `docs/`:
 
 - `docs/README.md` – navigation hub linking to architecture, implementation, operations,
   and governance guides.
-- `AGENTS.md` – deep-dive on the agent control plane, guardrails, and infrastructure.
+- `AGENTS.md` – comprehensive agent control plane playbook with multi-phase roadmap
+  covering control-plane modularization, Composio integration, approvals/frontend state,
+  data persistence, and operations/governance. References current implementation status,
+  target architecture, and actionable next steps mapped to `docs/todo.md`.
 - `docs/todo.md` – layered delivery tracker mirroring every documentation area.
 - `docs/getting-started/` – environment setup, core concepts, onboarding.
 - `docs/architecture/` – component diagrams and contracts for frontend, agent, Composio,

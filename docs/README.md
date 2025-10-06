@@ -5,6 +5,10 @@ It equips engineers, operators, and reviewers with the context they need to ship
 and quickly, while making it explicit which behaviours exist today and which are still
 on the roadmap.
 
+**Quick Start:** For a comprehensive overview of the multi-phase roadmap covering
+control-plane modularization, Composio integration, approvals/frontend state, data
+persistence, and operations/governance, see `AGENTS.md` (Agent Control Plane Playbook).
+
 Use the navigation below to jump directly to what you need:
 
 - **Getting Started** – environment setup, dev loop, and core concepts. ↳

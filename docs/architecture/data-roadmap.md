@@ -1,12 +1,95 @@
 # Data & Roadmap
 
-**Status:** Implemented (Supabase schema, seeds, Outbox worker) · In progress (APScheduler
-sync jobs, connected-account lifecycle)
+**Status:** Implemented (Supabase schema, seeds, Outbox worker) · In progress (Supabase Cron
+sync jobs, connected-account lifecycle, AI/Vector capabilities)
 
 The Supabase schema now ships in `db/migrations/001_init.sql` alongside a demo seed in
 `db/seeds/000_demo_tenant.sql`. In-memory shims remain for unit tests, but the control
 plane defaults to Supabase whenever credentials are provided. Use this document to track
 remaining persistence work and the conventions expected for new tables.
+
+## Supabase AI & Vector Capabilities
+
+Supabase provides an integrated AI toolkit built on Postgres and pgvector, enabling
+semantic search, embeddings management, and intelligent agent features without external
+dependencies:
+
+- **Vector storage** – pgvector extension for storing and querying embeddings at scale
+- **Semantic search** – similarity search using cosine distance, inner product, or L2 norms
+- **Hybrid search** – combine semantic and keyword (full-text) search in a single query
+- **Edge Functions AI API** – generate embeddings using the built-in `gte-small` model
+  directly in Edge Functions (no external API calls required)
+- **Python client (`vecs`)** – manage unstructured embeddings with a Pythonic interface
+- **Integration ecosystem** – works with OpenAI, Hugging Face, LangChain, LlamaIndex
+
+### Planned AI Use Cases
+
+1. **Evidence & signal embeddings** – store tool outputs and evidence as vectors to support
+   semantic retrieval and context-aware proposal generation
+2. **Guardrail learning** – track approval decisions and embedding-based similarity to tune
+   trust thresholds over time
+3. **Intelligent search** – enable operators to search audit logs, tool outputs, and
+   proposal history by semantic meaning rather than exact keywords
+4. **Context augmentation** – inject relevant historical context into agent prompts using
+   vector similarity search over past proposals and outcomes
+
+Reference `libs_docs/supabase/llms_docs.txt` (lines 3–200, 48117–48230) for
+implementation examples and Edge Functions patterns.
+
+## Supabase REST, Realtime, and Storage Services
+
+Supabase automatically reflects tables and RPCs to REST and Realtime channels. As soon
+as new tables or policies land, the following surfaces become available:
+
+- **PostgREST REST API** – served from `https://<project>.supabase.co/rest/v1/`. Use
+  service-role keys inside the agent/worker, and rely on RLS to scope tenant data in the
+  UI. When exposing UI loaders (e.g., approvals history) prefer Supabase JS client calls
+  over bespoke FastAPI routes.
+- **Realtime channels** – publish queue depth, approval outcomes, and guardrail changes
+  to `outbox:tenant_id`, `approvals:tenant_id`, etc. The frontend can subscribe to these
+  channels to keep the Desk and Activity surfaces in sync without waiting for state
+  deltas.
+- **Storage buckets** – dedicate a `evidence-artifacts` bucket for large files (PDFs,
+  spreadsheets) produced during envelopes. Persist the bucket ID in `audit_log.payload`
+  so the UI can render download links while respecting signed URL expirations.
+
+Keep REST filters and realtime channel names predictable—mirror table names and include
+tenant IDs so authorisation stays simple. Document any bespoke RPCs in
+`docs/implementation/composio-tooling.md`.
+
+## Local Development & Supabase CLI
+
+The Supabase CLI (`supabase start`) runs a local Postgres + API + Studio stack. Each
+developer should:
+
+1. Install the CLI (`npm i -g supabase` or follow
+   `docs/getting-started/setup.md#supabase-cli`).
+2. Run `supabase init` once per repo clone to scaffold a local project.
+3. Use `supabase start` to boot the stack (mirrors staging). The command outputs REST
+   URLs, anon keys, and service role secrets—export them into `.env.local` for Next.js and
+   `.env` for the agent.
+4. Run migrations with `supabase db push` instead of bespoke SQL scripts when iterating
+   locally. CI continues to apply migrations via `uv run supabase db push --linked` once
+   we automate the workflow.
+
+Leverage `supabase db remote commit` before shipping schema changes so all migrations are
+versioned. Update `docs/operations/runbooks/outbox-recovery.md` with any CLI workflows
+required for incident response.
+
+## Auth & RLS Strategy
+
+- **JWT claims** – expect Supabase Auth or an upstream identity provider to embed
+  `sub`, `tenant_id`, and `role` claims. Service-role keys (agent/worker) bypass RLS but
+  must never be exposed to the browser.
+- **Row Level Security** – enable RLS on every table. Use helper policies:
+  `tenant_isolation` (checks `tenant_id = auth.jwt() ->> 'tenant_id'`) and
+  `service_role_full_access` (for server-side jobs). Document any bespoke policies in
+  `docs/governance/security-and-guardrails.md`.
+- **Fine-grained scopes** – tie Composio scope approvals to Supabase policies. For
+  example, require `scope = 'finance:write'` before allowing inserts into
+  `evidence_embeddings` for finance tenants.
+- **Auditability** – log all policy changes in `audit_log` (category `auth_policy`). Use
+  Supabase Realtime to notify the Activity surface when policies change.
 
 ## Target Supabase Schema (Draft)
 
@@ -73,6 +156,13 @@ evolve the schema in lock-step with the agent.
 - **RLS:** read-only per tenant; writes allowed to service roles to ensure tamper-evidence.
 - **Cross-links:** referenced by governance guidance (`docs/governance/ownership-and-evergreen.md`).
 
+### `evidence_embeddings` (planned)
+- **Columns:** `id uuid pk`, `tenant_id uuid references tenants(id)`, `source_type text`, `source_id uuid`, `content text`, `embedding vector(384)`, `metadata jsonb`, `created_at timestamptz default now()`.
+- **Indexes:** `create index evidence_embeddings_tenant_idx on evidence_embeddings(tenant_id)` and `create index on evidence_embeddings using hnsw (embedding vector_ip_ops)` (HNSW index for fast similarity search).
+- **RLS:** tenant-scoped read; service role writes embeddings via Edge Functions or async workers.
+- **Purpose:** stores vectorized evidence, tool outputs, and proposal summaries to enable semantic search and context-aware agent prompts.
+- **Cross-links:** supports AI use cases in the Supabase AI & Vector Capabilities section above.
+
 ### ERD Snapshot
 
 ```mermaid
@@ -83,6 +173,7 @@ erDiagram
     tenants ||--o{ tool_catalog : "tenant_id"
     tenants ||--o{ outbox : "tenant_id"
     tenants ||--o{ audit_log : "tenant_id"
+    tenants ||--o{ evidence_embeddings : "tenant_id"
 
     tenants {
         uuid id PK
@@ -128,6 +219,15 @@ erDiagram
         jsonb payload
         text actor
     }
+    evidence_embeddings {
+        uuid id PK
+        uuid tenant_id FK
+        text source_type
+        uuid source_id
+        text content
+        vector embedding
+        jsonb metadata
+    }
 ```
 
 All tables run with Row-Level Security enabled and assume JWTs carry a `tenant_id` claim. 
@@ -135,12 +235,34 @@ Adjust policies once authentication wiring is finalised.
 
 ## Scheduling & Jobs
 
-- **Warm scan** – triggers immediately after a tenant connects Composio; executes read
-  tools to hydrate signals and evidence into Supabase.
+Use **Supabase Cron** (managed via the Supabase dashboard or SQL) for all recurring jobs.
+Supabase Cron leverages the `pg_cron` extension to schedule jobs that run SQL snippets,
+database functions, or invoke Edge Functions with zero network latency. Jobs can run
+anywhere from every second to once a year, and all runs are logged in
+`cron.job_run_details` for observability.
+
+### Recurring Jobs (Supabase Cron)
+
 - **Trickle refresh** – runs every 30–60 minutes per toolkit category respecting rate
-  buckets. Store scheduling metadata alongside tool definitions.
+  buckets. Configure via `cron.schedule()` to call an Edge Function that enqueues the
+  refresh task into the outbox.
 - **Catalog drift monitor** – compares local schema with the latest `composio.tools.get`
-  output; raises alerts when drift occurs.
+  output; raises alerts when drift occurs. Store drift snapshots in `catalog_audit`
+  table and expose a REST endpoint for dashboards. Schedule nightly or hourly via
+  Supabase Cron.
+- **Embedding re-indexer** – nightly job that recalculates embeddings for recent audit
+  entries and tool outputs. Kick off via Supabase Cron → Edge Function → worker queue.
+
+### Immediate Triggers (Agent-driven)
+
+For one-off immediate actions (e.g., warm scan after a tenant connects Composio), use
+agent-driven task queueing rather than scheduled jobs. The agent can directly enqueue
+tasks into the outbox or invoke Edge Functions on-demand.
+
+Track cron definitions in `docs/operations/run-and-observe.md` so on-call engineers know
+which schedules exist and how to pause/resume them. Manage jobs via the Supabase
+dashboard at **Integrations → Cron** or via SQL using `cron.schedule()` and
+`cron.unschedule()`.
 
 ## Outbox Worker Contract
 

@@ -1,9 +1,13 @@
 # Layered TODO Tracker
 
-**Status:** Updated October 5, 2025 · Keep this file in lockstep with `docs/`
+**Status:** Updated October 6, 2025 · Keep this file in lockstep with `docs/`
 
 Each section mirrors a documentation area so implementation work, documentation, and
 vendor references stay aligned. Reference `libs_docs/` samples whenever noted.
+
+**See also:** `AGENTS.md` for the comprehensive multi-phase roadmap with phase
+dependencies, deliverables, and status tracking across all layers (Foundation, Control
+Plane, Composio, Approvals/UI, Data/Worker, Observability, Governance).
 
 ## 1. Getting Started & Toolchain
 
@@ -46,6 +50,7 @@ vendor references stay aligned. Reference `libs_docs/` samples whenever noted.
 
 - [x] Document `/metrics` endpoint + collector configuration; update metric catalog. (`docs/operations/run-and-observe.md`, `docs/references/observability.md`)
 - [x] Record dashboard placeholders and PromQL queries until real screenshots exist. (`docs/references/observability.md`)
+- [x] Document Supabase Cron scheduling approach across architecture and operations docs; replace all APScheduler references. (`docs/architecture/data-roadmap.md`, `docs/architecture/composio-execution.md`, `docs/operations/run-and-observe.md`, `AGENTS.md`)
 - [ ] Expand incident runbooks with real postmortems and comms templates. (`docs/operations/runbooks/`)
 - [ ] Wire Composio OAuth env vars once backend settings are ready. (`docs/implementation/composio-tooling.md`, `agent/services/settings.py`)
 

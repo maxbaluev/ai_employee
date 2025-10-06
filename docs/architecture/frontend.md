@@ -23,10 +23,10 @@ providers stay isolated per surface.
 
 | Route segment | Purpose | Shared state slice | Notes |
 |---------------|---------|--------------------|-------|
-| `src/app/(desk)/desk/page.tsx` | Primary queue of proposals surfaced by the agent | `desk.queue`, `desk.metrics` | Hydrates from Supabase once the catalog/objectives services land. |
-| `src/app/(approvals)/approvals/page.tsx` | Human-in-the-loop approvals modal + history | `approvals.modal`, `approvals.history` | Renders JSON Schema forms sourced from `tool_catalog.schema`. |
+| `src/app/(desk)/desk/page.tsx` | Primary queue of proposals surfaced by the agent | `desk.queue`, `desk.metrics` | Hydrates from Supabase once the catalog/objectives services land. Includes semantic search over proposal history. |
+| `src/app/(approvals)/approvals/page.tsx` | Human-in-the-loop approvals modal + history | `approvals.modal`, `approvals.history` | Renders JSON Schema forms sourced from `tool_catalog.schema`. Surfaces similar past approvals via embeddings. |
 | `src/app/(integrations)/integrations/page.tsx` | Connected accounts and scope upgrades | `integrations.accounts`, `integrations.requests` | Surfaces `services.catalog` data and initiation links for Composio OAuth. |
-| `src/app/(activity)/activity/page.tsx` | Audit log, DLQ state, guardrail banners | `activity.timeline`, `activity.guardrails` | Consumes `guardrail-state.json` snapshots + audit feed. |
+| `src/app/(activity)/activity/page.tsx` | Audit log, DLQ state, guardrail banners | `activity.timeline`, `activity.guardrails` | Consumes `guardrail-state.json` snapshots + audit feed. Supports semantic search over audit logs. |
 
 - Each segment gets its own `layout.tsx` to mount the `CopilotSidebar`, top navigation,
   and surface-specific toolbars.
