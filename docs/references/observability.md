@@ -1,37 +1,26 @@
 # Observability Reference
 
-**Status:** Metrics and tracing instrumentation in progress; logging baseline in place.
+**Status:** Supabase-only analytics implemented; optional metrics/tracing in progress.
 
 This document is the canonical source for telemetry names, sampling defaults, and
 runbook cross-references. Update it in lockstep with `docs/operations/run-and-observe.md`
 and the linked runbooks.
 
-## Metrics
+## Analytics (primary)
 
-- **Scrape target:** `https://agent-host:8000/metrics`
-- **Collection options:**
+- Use Supabase dashboards and the built-in analytics API routes:
+  - `GET /analytics/outbox/status?tenant=<id>`
+  - `GET /analytics/guardrails/recent?tenant=<id>&limit=20`
+  - `GET /analytics/cron/jobs?limit=20`
+- Recommended Supabase queries:
+  - Outbox status: union of `outbox_pending_view` and terminal statuses from `outbox`.
+  - DLQ backlog: `select count(*) from outbox_dlq where tenant_id=:tenant_id`.
+  - Guardrail activity: `select guardrail, allowed, reason, created_at from audit_log where actor_type='agent'`.
 
-  ```yaml
-  receivers:
-    prometheus:
-      config:
-        scrape_configs:
-          - job_name: agent
-            scrape_interval: 15s
-            metrics_path: /metrics
-            static_configs:
-              - targets: ['agent-host:8000']
-  exporters:
-    prometheus:
-      endpoint: 0.0.0.0:9464
-  service:
-    pipelines:
-      metrics:
-        receivers: [prometheus]
-        exporters: [prometheus]
-  ```
+## Metrics (optional, future)
 
-- **Metric catalogue:**
+- `/metrics` endpoint is a stub in Phase 5. If you add Prometheus, expose counters and
+  histograms mirroring the catalogue below:
 
   | Metric | Type | Labels | Purpose |
   |--------|------|--------|---------|
@@ -42,7 +31,7 @@ and the linked runbooks.
   | `outbox_processed_total` | Counter | `tenant`, `status` | Success/retry/failure envelope counts. |
   | `outbox_queue_size` | Gauge | `tenant` | Depth of ready envelopes. |
   | `outbox_dlq_size` | Gauge | `tenant` | Dead-letter backlog. |
-  | `cron_job_runs_total` | Counter | `job_name`, `status` | Supabase Cron job execution tracking (catalog sync, trickle refresh, embeddings). |
+  | `cron_job_runs_total` | Counter | `job_name`, `status` | Supabase Cron job execution tracking. |
 
 - **Dashboards:**
   - **Control Plane Overview:** request volume, latency P95, guardrail blocks by type.
@@ -116,7 +105,7 @@ and the linked runbooks.
   - `composio_execution_latency_seconds` > 15s P95 or failure rate >20% →
     `docs/operations/runbooks/composio-outage.md`.
 
-## Tracing
+## Tracing (optional)
 
 - **Instrumentation packages:** `opentelemetry-instrumentation-fastapi`,
   `opentelemetry-sdk`, `opentelemetry-instrumentation-structlog`.

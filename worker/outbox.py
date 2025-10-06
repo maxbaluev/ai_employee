@@ -14,8 +14,10 @@ from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponen
 from agent.schemas.envelope import Envelope
 from agent.services import (
     AppSettings,
+    ActionsService,
     OutboxService,
     OutboxStatus,
+    PolicyService,
     SupabaseAuditLogger,
     SupabaseNotConfiguredError,
     SupabaseOutboxService,
@@ -52,6 +54,8 @@ class OutboxWorker:
         outbox_service: OutboxService,
         audit_logger: SupabaseAuditLogger,
         composio_client: Any | None,
+        policy_service: PolicyService | None = None,
+        actions_service: ActionsService | None = None,
     ) -> None:
         self._settings = settings
         self._outbox = outbox_service
@@ -60,6 +64,9 @@ class OutboxWorker:
         self._poll_interval = settings.outbox_poll_interval_seconds
         self._batch_size = settings.outbox_batch_size
         self._max_attempts = max(1, settings.outbox_max_attempts)
+        self._policy = policy_service
+        self._actions = actions_service
+        self._rate_last_sent: dict[str, float] = {}
 
     def run_forever(self) -> None:
         logger.info("worker.start", poll_interval=self._poll_interval)
@@ -117,6 +124,38 @@ class OutboxWorker:
 
     def _process_record(self, record) -> None:
         envelope_id = record.envelope.envelope_id
+        # Policy gate: allowed writes?
+        policy = None
+        if self._policy is not None:
+            policy = self._policy.get_effective_policy(tenant_id=record.tenant_id, tool_slug=record.envelope.tool_slug)
+            if policy and not policy.write_allowed:
+                reason = "writes_disabled_by_policy"
+                self._outbox.mark_failure(envelope_id, error=reason, retry_in=None, move_to_dlq=False)
+                self._audit.log_envelope(
+                    tenant_id=record.tenant_id,
+                    envelope_id=envelope_id,
+                    tool_slug=record.envelope.tool_slug,
+                    status=OutboxStatus.FAILED,
+                    metadata={"error": reason},
+                )
+                logger.warning("worker.writes_disabled", envelope_id=envelope_id)
+                return
+
+        # Rate limiting per bucket (simple defer based on last sent timestamps)
+        bucket = None
+        if policy and policy.rate_bucket:
+            bucket = str(policy.rate_bucket)
+        # If the record defines its own bucket in metadata/result, prefer that
+        rate_bucket = bucket
+        if rate_bucket:
+            now = time.time()
+            wait_for = self._rate_wait_seconds(rate_bucket, now)
+            if wait_for > 0:
+                # Defer without failure; keep status pending with a next_run_at
+                self._outbox.defer(envelope_id, retry_in=int(wait_for))
+                logger.info("worker.defer_rate_bucket", envelope_id=envelope_id, rate_bucket=rate_bucket, retry_in=int(wait_for))
+                return
+
         self._outbox.mark_in_progress(envelope_id)
         logger.info(
             "worker.process",
@@ -156,6 +195,12 @@ class OutboxWorker:
         else:
             metadata = result if isinstance(result, Mapping) else {"result": result}
             self._outbox.mark_success(envelope_id, result=metadata)
+            # Project into actions history for analytics
+            try:
+                if self._actions is not None:
+                    self._actions.record_success(tenant_id=record.tenant_id, record=record, result=metadata)
+            except Exception:  # pragma: no cover - don't block success on analytics projection
+                logger.warning("worker.actions_projection_failed", envelope_id=envelope_id)
             self._audit.log_envelope(
                 tenant_id=record.tenant_id,
                 envelope_id=envelope_id,
@@ -164,6 +209,9 @@ class OutboxWorker:
                 metadata=metadata,
             )
             logger.info("worker.success", envelope_id=envelope_id)
+            # Update last-sent for this bucket
+            if rate_bucket:
+                self._rate_last_sent[rate_bucket] = time.time()
 
     def _execute_once(self, record) -> Mapping[str, Any] | Any:
         if self._composio is None:
@@ -196,6 +244,22 @@ class OutboxWorker:
             return self._execute_once(record)
 
         return _runner()
+
+    def _rate_wait_seconds(self, bucket: str, now: float) -> float:
+        """Return required wait time to respect a coarse bucket cadence.
+
+        Buckets are human-readable identifiers (e.g., 'slack.minute', 'email.daily').
+        We translate them into conservative minimum gaps between sends per process.
+        """
+        gaps = {
+            "slack.minute": 5.0,
+            "tickets.api": 2.0,
+            "email.daily": 60.0,
+        }
+        min_gap = gaps.get(bucket, 1.0)
+        last = self._rate_last_sent.get(bucket, 0.0)
+        elapsed = now - last
+        return max(0.0, min_gap - elapsed)
 
 
 def _is_conflict(exc: Exception) -> bool:
@@ -245,12 +309,23 @@ def build_worker(settings: AppSettings) -> OutboxWorker:
     outbox_service = SupabaseOutboxService(client, schema=settings.supabase_schema)
     audit_logger = SupabaseAuditLogger(client, schema=settings.supabase_schema, actor_type="worker", actor_id="outbox")
     composio_client = build_composio_client(settings)
+    # Policy + actions services
+    try:
+        from agent.services import SupabasePolicyService, SupabaseActionsService  # local import to avoid cycles
+    except Exception:  # pragma: no cover - defensive
+        SupabasePolicyService = None  # type: ignore
+        SupabaseActionsService = None  # type: ignore
+
+    policy_service = SupabasePolicyService(client, schema=settings.supabase_schema) if SupabasePolicyService else None
+    actions_service = SupabaseActionsService(client, schema=settings.supabase_schema) if SupabaseActionsService else None
 
     return OutboxWorker(
         settings=settings,
         outbox_service=outbox_service,
         audit_logger=audit_logger,
         composio_client=composio_client,
+        policy_service=policy_service,
+        actions_service=actions_service,
     )
 
 

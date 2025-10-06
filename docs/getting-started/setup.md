@@ -1,7 +1,6 @@
 # Getting Started & Local Development
 
-**Status:** Implemented (Next.js UI + FastAPI ADK scaffold) · Planned (Composio tools,
-Supabase persistence)
+**Status:** Implemented (Next.js UI + FastAPI ADK + Supabase schema + Outbox worker) · In progress (OAuth UX)
 
 Follow this guide to stand up a local environment that mirrors the documented
 infrastructure (mise + uv + pnpm).
@@ -125,13 +124,14 @@ Run just the frontend with `pnpm run dev:ui`, or only the agent with
 ## 5. Verify the Environment
 
 1. Visit <http://localhost:3000>; the Copilot sidebar and theme playground should load.
-2. `curl http://localhost:8000/healthz` should return `{ "status": "ok" }`.
-3. Trigger the sample “set theme” action and confirm the console shows AGUI events
+2. `curl http://localhost:8000/healthz` and `/readyz` should return `{ "status": "ok" }`.
+3. `curl http://localhost:8000/analytics/outbox/status` returns JSON (when Supabase configured).
+4. Trigger the sample “set theme” action and confirm the console shows AGUI events
    without errors.
 
 ## 6. Optional: Supabase Bootstrap
 
-If you are bringing up Supabase locally, apply the schema in `db/migrations/001_init.sql`
+If you are bringing up Supabase locally, apply the initial universal schema in `db/migrations/001_init.sql`
 and the demo seed in `db/seeds/000_demo_tenant.sql` from your Supabase project directory
 before running migrations of your own:
 

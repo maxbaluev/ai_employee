@@ -1,5 +1,8 @@
 # Control Plane Product Requirements
 
+Note: This document focuses on the control-plane slice. For the end‑to‑end, universal
+Composio‑only PRD & Architecture, see `docs/prd/universal-ai-employee-prd.md`.
+
 **Status:** Drafted October 6, 2025 · Aligns with Phase 4/5 implementation snapshot
 
 ## 1. Purpose & Vision

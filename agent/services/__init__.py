@@ -23,6 +23,8 @@ from .outbox import (
     OutboxStatus,
     SupabaseOutboxService,
 )
+from .policy import EffectiveToolPolicy, PolicyService, SupabasePolicyService
+from .actions import ActionsService, SupabaseActionsService
 from .settings import AppSettings, get_settings, reset_settings_cache
 from .state import (
     APPROVAL_MODAL_KEY,
@@ -62,6 +64,11 @@ __all__ = [
     "SupabaseOutboxService",
     "OutboxRecord",
     "OutboxStatus",
+    "PolicyService",
+    "SupabasePolicyService",
+    "EffectiveToolPolicy",
+    "ActionsService",
+    "SupabaseActionsService",
     "DESK_STATE_KEY",
     "GUARDRAIL_STATE_KEY",
     "APPROVAL_MODAL_KEY",

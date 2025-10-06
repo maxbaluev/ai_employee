@@ -4,9 +4,17 @@
 (productised surfaces)
 
 Use this guide whenever you introduce a new customer-facing surface (Desk, Approvals,
-Integrations, Activity & Safety). The patterns below codify what we learned from the
+Activity & Safety, Integrations, Hire/Roster). The patterns below codify what we learned from the
 CopilotKit examples in `libs_docs/copilotkit_examples/` and the ADK integration docs in
 `libs_docs/copilotkit_docs/adk/`.
+
+## 0. Surfaces Overview (v1)
+
+- Desk – Plan of Day (5–15 cards) with Evidence snippet, risk badges, Approve/Edit/Skip, and one‑click “Approve all low‑risk”.
+- Approvals – grouped by app & employee; schema‑driven forms (from Composio JSON Schemas); diff view for high‑impact edits.
+- Activity & Safety – Action Timeline, Outbox Health (retry/DLQ), rate‑limit badges; Pause/Undo controls.
+- Integrations (Composio) – Connect Composio, discover tools, Allowed Writes toggles, JIT Connect/Scope, ROI hints.
+- Hire/Roster – first hire wizard (role/hours/autonomy); roster chips (All | A | B | +); Assignments drawer (capacity/day by program).
 
 ## 1. Shape Shared State Intentionally
 

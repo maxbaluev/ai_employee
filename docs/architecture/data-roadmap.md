@@ -1,6 +1,6 @@
 # Data Roadmap & Supabase Schema
 
-**Status (October 6, 2025):** Implemented (catalog, objectives, outbox, audit) · In progress (approvals history, analytics)
+**Status (October 6, 2025):** Implemented (catalog, objectives, outbox, employees, tasks, actions, audit) · In progress (signals, connected-account UX)
 
 This document describes the persistence layer backing the control plane. Treat it as the
 authoritative map when adding migrations or debugging Supabase data flows.
@@ -20,17 +20,27 @@ authoritative map when adding migrations or debugging Supabase data flows.
            │                                       │
            ▼                                       │
 ┌──────────────────┐     ┌──────────────────┐      │
+│ employees        │     │ program_assign.  │      │
+│──────────────────│     │──────────────────│      │
+│ tenant_id (FK)   │◄────│ tenant_id (FK)   │      │
+│ role/autonomy    │     │ capacity/priority│      │
+└──────────────────┘     └──────────────────┘      │
+           │                                       │
+           ▼                                       │
+┌──────────────────┐     ┌──────────────────┐      │
+│ tasks            │◄────│ actions          │      │
+│──────────────────│     │──────────────────│      │
+│ employee_id (FK) │     │ external_id      │      │
+│ status/proposed  │     │ tool/args/result │      │
+└──────────────────┘     └──────────────────┘      │
+           │                                       │
+           ▼                                       │
+┌──────────────────┐     ┌──────────────────┐      │
 │ outbox           │◄────│ outbox_dlq       │──────┘
 │──────────────────│     │──────────────────│
-│ id (PK)          │     │ id (PK)          │
-│ tenant_id (FK)   │     │ tenant_id (FK)   │
-│ tool_slug        │     │ tool_slug        │
-│ arguments JSONB  │     │ arguments JSONB  │
-│ status           │     │ status='dlq'     │
-│ attempts         │     │ attempts         │
-│ next_run_at      │     │ last_error       │
-│ metadata JSONB   │     │ metadata JSONB   │
-│ created_at       │     │ inserted_at      │
+│ external_id      │     │ status='dlq'     │
+│ rate_bucket      │     │ attempts/error   │
+│ must_run_before  │     │                  │
 └──────────────────┘     └──────────────────┘
 ```
 
@@ -40,19 +50,24 @@ authoritative map when adding migrations or debugging Supabase data flows.
 
 ## Table Details
 
-- **tool_catalog** – Populated by the catalog sync job. Columns `schema` and
-  `required_scopes` feed the Desk & Approvals surfaces. RLS policy: tenants can `SELECT`
-  their rows; the service role can `UPSERT`.
+- **tool_catalog** – Populated by the catalog sync job. Columns include
+  `category`, `read_write_flags`, `risk_default`, `approval_default`, `write_allowed`,
+  `rate_bucket`, `schema`, and `required_scopes`. RLS: tenant `SELECT`, service role `UPSERT`.
 - **objectives** – Long-lived goals rendered in the Desk queue seeding process. RLS
   mirrors `tool_catalog`.
+- **employees** – Native multi-employee support (role, autonomy, schedule, status). RLS tenant-scoped.
+- **program_assignments** – Per-employee program capacity and priority. RLS tenant-scoped.
+- **tasks** – Proposed work items; links objectives/programs to employees; stores seed references to Evidence Cards. Index on `(tenant_id, employee_id, status)`.
+- **actions** – Historical projection of executed envelopes (universal Action Envelope). Unique index on `external_id`.
 - **outbox** – Primary action queue. Worker updates `status`, `attempts`, `metadata`, and
-  `next_run_at`. Indexes:
+  `next_run_at`. Universal fields: `rate_bucket`, `must_run_before`, `result` JSON. Indexes:
   - `status_next_run_idx` on `(status, next_run_at)` for efficient polling.
   - `tenant_created_idx` on `(tenant_id, created_at desc)` for tenant-scoped dashboards.
 - **outbox_dlq** – Stores failed envelopes when `move_to_dlq=True`. Shares schema with
   `outbox` for easy replay.
 - **audit_log** – Append-only log; worker writes structured events with
   `actor_type='worker'`.
+- **tool_policies** – Per-tool overrides (risk, approval, write_allowed, rate_bucket).
 
 ## Migration Conventions
 
@@ -91,6 +106,12 @@ authoritative map when adding migrations or debugging Supabase data flows.
     future, ensuring scheduled retries respect delays.
   - Conflicts (`HTTP 409`) transition to `status='conflict'` without retry.
   - Non-retryable errors move the envelope to `outbox_dlq`.
+
+## Views Available
+
+- `outbox_pending_view` – optimized view of pending envelopes ready to send.
+- `outbox_history_view` – terminal statuses with metadata for Activity timelines.
+- `catalog_tools_view` – flattened tool + policy view consumed by Integrations.
 
 ## Observability Hooks
 

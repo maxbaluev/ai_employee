@@ -1,12 +1,14 @@
-# Core Concepts
+# Core Concepts (Universal)
 
 **Status:** Implemented (Next.js UI + FastAPI control plane + Supabase/Composio services + coordinator + approvals scaffolds) ·
 In progress (integrations UX)
 
-The AI Employee Platform leans on production-ready vendor stacks (CopilotKit, Google ADK,
-Composio, Supabase) so the repository mostly focuses on wiring, guardrails, and shared
-state. Use this page to orient yourself before diving into the detailed architecture and
-implementation guides.
+The platform is Composio-only with one universal write (Action Envelope) executed only by
+the Outbox worker. It leans on CopilotKit (UI), Google ADK (agents), and Supabase (RLS
+data/ops). Use this page to orient yourself before diving into detailed docs.
+
+Key terms (see `docs/references/glossary.md`): Value Objective, Capability Graph,
+Signals, Evidence Card, Proposed Action, Action Envelope, Outbox, Trust Score.
 
 ## 1. User Experience Layer (Next.js + CopilotKit)
 
@@ -41,7 +43,7 @@ implementation guides.
   callbacks now emit `StateDeltaEvent`s for desk queues, approvals, guardrails, and
   outbox metadata.
 
-## 3. Composio Execution Layer
+## 3. Composio Execution Layer (only source of tools)
 
 - `agent/services/catalog.py` ships `ComposioCatalogService` for live SDK discovery,
   `InMemoryCatalogService` for tests, and `SupabaseCatalogService` for persistence. When
@@ -50,12 +52,13 @@ implementation guides.
 - `agent/services/outbox.py` and `worker/outbox.py` provide a Supabase-backed queue,
   Tenacity-powered retries, and DLQ management. The worker hydrates a Composio client via
   `GoogleAdkProvider` (see `libs_docs/composio_next/python/providers/google_adk/`).
-- Connected-account OAuth flows remain to be wired into the UI, but the control plane
-  already captures required scopes and validates arguments against the catalog schema.
+- Allowed Tools & policy are stored per tool (risk_default, approval_default,
+  write_allowed, rate_bucket). JIT connect/scope upgrades unblock approved actions with
+  minimal scopes and auto-execute once granted.
 - Vendor references in `libs_docs/composio_next/` and `libs_docs/adk/` are mirrored in our
   services so you can trace behaviour back to upstream examples when debugging.
 
-## 4. Data Plane & Supabase Services
+## 4. Data Plane & Supabase Services (minimal RLS schema)
 
 - Baseline schema + demo data live in `db/migrations/001_init.sql` and
   `db/seeds/000_demo_tenant.sql`. The control plane defaults to Supabase implementations
@@ -67,8 +70,8 @@ implementation guides.
   `docs/operations/run-and-observe.md` for the managed list. Reference patterns in
   `libs_docs/supabase/llms_docs.txt` (cron scheduling, Edge Functions, vector search) when
   adding new jobs or AI-backed workflows.
-- Planned: hydrate vector embeddings (`evidence_embeddings`), edge functions for webhook
-  processing, and connected-account lifecycle automation.
+- Planned: hydrate vector embeddings (`evidence_embeddings`), edge functions for
+  webhooks, and connected-account lifecycle automation.
 
 ## 5. Observability & Safety
 

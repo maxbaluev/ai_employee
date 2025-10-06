@@ -1,9 +1,12 @@
 # AGENTS.md · AI Employee Control Plane (Ready to Run)
 
-Status: Updated October 6, 2025 · Phases 0–5 complete · Supabase-only ops
+Status: Updated October 6, 2025 · Composio-only · One executor (Outbox) · Supabase-only ops
 
 This file is a quick, agent‑focused guide to build, run, test, and extend the app.
-For product docs and architecture, see docs/.
+For product docs and architecture, start with:
+- `docs/prd/universal-ai-employee-prd.md` (canonical PRD & Architecture)
+- `docs/architecture/universal-action-envelope.md` (only write contract)
+- `docs/architecture/overview.md` (system diagram and invariants)
 
 ## Setup Commands
 - Install toolchain and deps
@@ -38,22 +41,27 @@ For product docs and architecture, see docs/.
 
 ## Project Map
 - Agent runtime
-  - `agent/app.py` – FastAPI app; mounts ADK agent; healthz; analytics router
+  - `agent/app.py` – FastAPI app; mounts ADK agent (typed roles); healthz/readyz; analytics router
   - `agent/agents/` – `control_plane.py` factory + `coordinator.py` multipliers
   - `agent/callbacks/` – before/after modifiers; guardrail glue
-  - `agent/guardrails/` – quiet hours, trust, scopes, evidence (pure `check(...)`)
+  - `agent/guardrails/` – quiet hours, trust, scopes, evidence (pure `check(...)` before model call)
   - `agent/services/` – settings, catalog, outbox, objectives, audit, state helpers
   - `agent/schemas/envelope.py` – envelope DTO + shared‑state helpers
 - Worker
   - `worker/outbox.py` – Supabase‑backed queue executor with retries/DLQ
-- Frontend
-  - `src/app/(workspace)/page.tsx` – overview
-  - `src/app/(workspace)/desk/page.tsx` – live queue (shared state)
-  - `src/app/(workspace)/approvals/page.tsx` – schema‑driven approvals
+- Frontend (five surfaces)
+  - `src/app/(workspace)/desk/page.tsx` – Plan of Day (approve/edit/skip; approve low-risk)
+  - `src/app/(workspace)/approvals/page.tsx` – schema‑driven approvals (from Composio JSON Schemas)
+  - `src/app/(workspace)/activity/page.tsx` – outbox timeline, DLQ, guardrail banners
+  - `src/app/(workspace)/integrations/page.tsx` – Composio connect, Allowed Writes, JIT Scope
+  - `src/app/(workspace)/hire/page.tsx` – hire/roster & assignments drawer
 - Docs
+  - `docs/prd/universal-ai-employee-prd.md` – PRD & Architecture (Composio-only)
+  - `docs/architecture/universal-action-envelope.md` – only write contract
+  - `docs/architecture/data-model.md` – minimal RLS schema
   - `docs/architecture/*` – control plane, frontend, data roadmap
   - `docs/operations/*` – runbooks + Supabase dashboards
-  - `docs/prd/*` – product requirements; `docs/use_cases/*` – operator workflows
+  - `docs/use_cases/*` – operator workflows
 
 ## Guardrails & Safety
 - All guardrails are pure functions (`check(...) -> GuardrailResult`) and run in
@@ -64,6 +72,12 @@ For product docs and architecture, see docs/.
   AGUI emits JSON Patch deltas; UI updates in real time.
 - Observability for Phase 5 stays inside Supabase (no Prometheus). Use analytics routes
   and saved SQL/dashboard widgets in Supabase for ops.
+
+## Invariants (do not violate)
+- One universal write (`mcp.exec` Action Envelope); agents never write directly.
+- One executor (Outbox). Idempotency enforced via `actions.external_id`.
+- Schema-driven UI (JSON Schemas from Composio) – no per-tool React forms.
+- Strict RLS on all tables; browser never sees secrets.
 
 ## Environment Keys (excerpt)
 - `GOOGLE_API_KEY` – model access for ADK agent
@@ -82,5 +96,5 @@ For product docs and architecture, see docs/.
 - Empty catalog: run the catalog sync job or ensure `COMPOSIO_API_KEY` is set
 - Worker idle: verify Supabase keys and that `outbox` has `status='pending'` rows
 
-For deeper context, start with `docs/getting-started/core-concepts.md` and
-`docs/architecture/agent-control-plane.md`.
+For deeper context, start with `docs/prd/universal-ai-employee-prd.md`,
+`docs/getting-started/core-concepts.md`, and `docs/architecture/agent-control-plane.md`.

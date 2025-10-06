@@ -185,3 +185,21 @@ The current implementation already uses these interfaces:
 Update this file whenever a roadmap item lands. Each section should reflect the state of
 the repository on the merge date so reviewers can map changes back to architecture
 decisions quickly.
+
+---
+
+## 9. Typed ADK Agents (roles)
+
+The control plane composes small, typed agents rather than one monolith. These roles map
+directly to callbacks and state slices and align with the universal PRD:
+
+- Outcome Planner – selects Reader Kernels, produces Signals and Evidence Cards, emits
+  narration into the Sidecar.
+- Drafter – fills `args` for envelopes using promptlets (tone/length/links enforced),
+  surfaces schema forms for edits.
+- Compliance – assigns risk; enforces quiet hours, DNC, scopes, and rate buckets; marks
+  `APPROVAL_REQUIRED`; triggers JIT connect/scope flows.
+- QA/Eval – samples drafts; checks tone/sensitive terms; updates Trust Score from
+  approvals/edits/errors; suggests tweaks.
+
+ADK agents never execute writes—only enqueue Action Envelopes for the Outbox worker.

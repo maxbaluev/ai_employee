@@ -1,0 +1,67 @@
+{
+  "$id": "https://example.com/schemas/action-envelope.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Action Envelope (mcp.exec)",
+  "type": "object",
+  "required": [
+    "action_id",
+    "external_id",
+    "tenant_id",
+    "employee_id",
+    "type",
+    "tool",
+    "args",
+    "risk",
+    "approval",
+    "constraints",
+    "result",
+    "timestamps"
+  ],
+  "properties": {
+    "action_id": { "type": "string" },
+    "external_id": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "employee_id": { "type": "string" },
+    "type": { "const": "mcp.exec" },
+    "tool": {
+      "type": "object",
+      "required": ["name", "composio_app"],
+      "properties": {
+        "name": { "type": "string" },
+        "composio_app": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "args": { "type": "object", "additionalProperties": true },
+    "risk": { "enum": ["low", "medium", "high"] },
+    "approval": { "enum": ["auto", "required", "granted", "denied"] },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "rate_bucket": { "type": "string" },
+        "must_run_before": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "enum": ["pending", "sending", "sent", "failed", "conflict", "skipped"] },
+        "provider_id": { "type": ["string", "null"] },
+        "error": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "timestamps": {
+      "type": "object",
+      "properties": {
+        "created_at": { "type": "string", "format": "date-time" },
+        "sent_at": { "type": ["string", "null"], "format": "date-time" },
+        "completed_at": { "type": ["string", "null"], "format": "date-time" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

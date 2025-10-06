@@ -1,6 +1,6 @@
 # Composio Execution Layer
 
-**Status:** Implemented (Supabase catalog sync + Outbox worker) · In progress (connected account UX, telemetry)
+**Status:** Implemented (Supabase catalog sync + Outbox worker) · In progress (connected account UX, JIT flows, telemetry)
 
 ADR-0001 locks the platform to Composio as the only mechanism for executing actions on
 third-party SaaS apps. This document provides the contract for implementing that
@@ -11,8 +11,27 @@ integration end-to-end.
 1. **Catalog sync** – pull toolkits, schemas, scopes, and risk metadata per tenant via `agent/services/catalog_sync.py`.
 2. **Connected account lifecycle** – initiate OAuth, poll for activation, disable, and
    re-authenticate accounts.
-3. **Execution path** – enqueue, execute, and audit calls to `composio.tools.execute`.
+3. **Execution path** – enqueue, execute, and audit calls to `composio.tools.execute` (Outbox is the only executor).
 4. **Observability** – capture telemetry (latency, success/failure, provider conflicts).
+
+## Broker Policy (Allowed Tools & Risk)
+
+For each discovered tool, persist policy in `tool_policies`:
+
+- `risk_default` – Low/Medium/High per category (finance/public social/devops default High).
+- `approval_default` – Auto/Required.
+- `write_allowed` – boolean; default off for High‑risk categories.
+- `rate_bucket` – e.g., `email.daily`, `slack.minute`, `tickets.api`.
+
+UI surfaces toggles in Integrations. Policies gate envelope execution at the worker.
+
+## JIT Connect & Scope Upgrade
+
+When an approved action lacks access, open a JIT modal:
+
+- Show minimal scopes requested with plain‑English descriptions.
+- On success, the original envelope executes automatically (no extra clicks).
+- Store per‑tool `status = connected|missing_scope|expired|error` for Integrations and blocked cards.
 
 ## Reference Material
 
@@ -54,8 +73,7 @@ Outbox Worker (`worker/outbox.py`)
  └─ Persists outcome + latency + conflict flags (Supabase `outbox` + `outbox_dlq` tables)
 
 UI
- ├─ Displays schema-driven edit forms using cached JSON schema (Desk surface today,
-    Approvals modal planned)
+ ├─ Displays schema-driven edit forms using cached JSON schema (Desk & Approvals)
  └─ Shows execution result and audit trail (via `StateDeltaEvent`s and audit log entries)
 ```
 

@@ -29,6 +29,21 @@ def healthz() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/readyz")
+def readyz() -> dict[str, str]:
+    """Liveness probe: returns ok when the app is serving requests."""
+
+    return {"status": "ok"}
+
+
+@app.get("/metrics", response_class=None)
+def metrics() -> str:
+    """Minimal metrics stub (Phase 5: Supabase-only analytics)."""
+
+    # Keep this stub lightweight; full Prometheus wiring is optional and deferred.
+    return "# metrics disabled; use /analytics/* and Supabase dashboards"  # type: ignore[return-value]
+
+
 def main() -> None:
     """Serve the ASGI app with Uvicorn."""
 

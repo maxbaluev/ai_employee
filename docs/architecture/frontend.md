@@ -1,6 +1,6 @@
 # Frontend Architecture (Next.js + CopilotKit)
 
-**Status:** Implemented (Desk + Approvals scaffolds, runtime bridge) · In progress (Integrations, Activity surfaces)
+**Status:** Implemented (Desk + Approvals scaffolds, runtime bridge) · In progress (Integrations, Activity & Safety, Hire/Roster)
 
 ## Current Implementation Snapshot
 
@@ -16,7 +16,7 @@
 The sidebar defaults to always-open for easier debugging. Copy the ergonomics when
 crafting future surfaces.
 
-## Planned Route Layout & Surfaces
+## Planned Route Layout & Surfaces (Five)
 
 All product surfaces will live under App Router segment groups so layouts, loaders, and
 providers stay isolated per surface.
@@ -25,8 +25,9 @@ providers stay isolated per surface.
 |---------------|---------|--------------------|-------|
 | `src/app/(workspace)/desk/page.tsx` | Primary queue of proposals surfaced by the agent | `desk.queue`, `desk.metrics` | Scaffolded: streams queue updates via `StateDeltaEvent`s, hydrates from Supabase when available, renders approval shortcuts. |
 | `src/app/(workspace)/approvals/page.tsx` | Human-in-the-loop approvals modal + history | `approvalModal`, `approvals.history` | Scaffolded: renders `approval-modal.json` schema-driven forms, persists form state via shared state and emits approve/reject actions. |
-| `src/app/(integrations)/integrations/page.tsx` | Connected accounts and scope upgrades | `integrations.accounts`, `integrations.requests` | Surfaces `services.catalog` data and initiation links for Composio OAuth. |
+| `src/app/(integrations)/integrations/page.tsx` | Connected accounts and scope upgrades | `integrations.accounts`, `integrations.requests` | Surfaces `services.catalog` data and JIT connect/scope upgrades. |
 | `src/app/(activity)/activity/page.tsx` | Audit log, DLQ state, guardrail banners | `activity.timeline`, `activity.guardrails` | Consumes `guardrail-state.json` snapshots + audit feed. Supports semantic search over audit logs. |
+| `src/app/(workspace)/hire/page.tsx` | Hire wizard + roster & assignments | `roster.list`, `assignments.drawer` | Roster chips (All | A | B | +); per‑program capacity/day sliders; trust chip. |
 
 - Each segment gets its own `layout.tsx` to mount the `CopilotSidebar`, top navigation,
   and surface-specific toolbars.
@@ -95,9 +96,10 @@ flowchart LR
 | Surface | Purpose | Status |
 |---------|---------|--------|
 | Desk | Show queued proposals with evidence + quick actions | Planned (requires `desk-state.json` + Supabase queue) |
-| Approvals | Schema-driven edit + approve/reject flows | Planned (blocked on catalog + envelope schema landing) |
+| Approvals | Schema-driven edit + approve/reject flows | In progress (catalog + envelope schema landed) |
 | Integrations | Connected-account lifecycle + catalog inspection | Planned (blocked on Composio OAuth wiring) |
 | Activity & Safety | Audit log, DLQ, guardrail controls | Planned (blocked on audit log + worker telemetry) |
+| Hire/Roster | Roster, autonomy, assignments drawer | Planned |
 
 Implementation recipes live in `docs/implementation/frontend-shared-state.md` and
 `docs/implementation/ui-surfaces.md`.

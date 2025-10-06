@@ -1,6 +1,10 @@
 # Run & Observe
 
-**Status:** Implemented (logging baseline) · In progress (metrics/tracing wiring, runbooks)
+**Status:** Implemented (logging baseline, Supabase-only analytics) · In progress (optional metrics/tracing)
+
+Phase 5 observability stays inside Supabase (no external Prometheus). Use analytics
+routes and saved SQL/dashboard widgets for ops. See also the acceptance criteria in
+`docs/prd/universal-ai-employee-prd.md`.
 
 This guide outlines the operational baseline expected for every environment.
 
@@ -16,14 +20,17 @@ This guide outlines the operational baseline expected for every environment.
 Rely on Supabase as the system of record for queue and audit data—no external telemetry
 stack is required for Phase 5.
 
-1. **Outbox status** – create a Supabase saved SQL snippet:
+1. **Outbox status** – create a Supabase saved SQL snippet (leverages `outbox_pending_view`):
 
    ```sql
+   select 'pending' as status, count(*)
+   from outbox_pending_view
+   where tenant_id = :tenant_id
+   union all
    select status, count(*)
    from outbox
-   where tenant_id = :tenant_id
-   group by status
-   order by status;
+   where tenant_id = :tenant_id and status in ('sent','failed','conflict','skipped','success')
+   group by status;
    ```
 
    Visualise it as a bar chart to spot stalled envelopes.
@@ -31,8 +38,15 @@ stack is required for Phase 5.
 2. **DLQ backlog** – `select count(*) from outbox_dlq where tenant_id = :tenant_id;`
    Pair this with the runbook in `docs/operations/runbooks/outbox-recovery.md`.
 
-3. **Guardrail activity** – query the audit log: `select guardrail, allowed, reason,
-   created_at from audit_log where actor_type = 'agent' order by created_at desc limit 50;`
+3. **Guardrail activity** – query the audit log:
+
+   ```sql
+   select guardrail, allowed, reason, created_at
+   from audit_log
+   where actor_type = 'agent' and tenant_id = :tenant_id
+   order by created_at desc
+   limit 50;
+   ```
 
 4. **Cron health** – use Supabase's Cron dashboard or SQL:
 
@@ -118,10 +132,9 @@ Update this table whenever new jobs are added.
 ## Health Checks
 
 - UI: rely on Next.js built-in health endpoint (`/`).
-- Agent: expose `/healthz` returning success if the ADK runner can create a session and
-  (once implemented) connect to Supabase/Composio.
-- Supabase Cron: monitor `cron.job_run_details` for failed runs and `cron_job_runs_total`
-  metric for trends.
+- Agent: `/healthz` and `/readyz` return `{status:"ok"}`. `/metrics` is a stub for now;
+  use analytics endpoints and Supabase dashboards.
+- Supabase Cron: monitor `cron.job_run_details` for failed runs.
 
 ## Alerting Baseline
 

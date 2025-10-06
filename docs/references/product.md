@@ -1,6 +1,6 @@
-# Product Vision Snapshot
+# Product Vision Snapshot (Universal)
 
-**Source:** Consolidated from the previous PRD (`docs/prd.md`)
+See the canonical PRD: `docs/prd/universal-ai-employee-prd.md`.
 
 ## Vision
 
@@ -14,17 +14,17 @@ every recommendation, approve with confidence, and roll back when needed.
 2. Manual drafting and repetitive follow-up work.
 3. Risky automations that operate without human oversight.
 
-## Success Metrics (target once the system is feature-complete)
+## Success Metrics (from PRD v3.0)
 
 | Metric | Target |
 |--------|--------|
-| Connect → first approved action | ≤ 5 minutes |
+| Connect → first approved action | ≤ 60 seconds |
 | Approved actions without edits (week 2) | ≥ 70% |
 | Tenants connecting ≥ 2 apps in first session | ≥ 65% |
 | Outbox completion p95 | ≤ 5 minutes |
 | Incident MTTR (Composio/Outbox failures) | < 30 minutes |
 
-## Core Surfaces (planned)
+## Core Surfaces
 
 - **Desk** – operator queue with evidence-first cards.
 - **Approvals** – schema-driven edit + approve/reject flows.
@@ -32,4 +32,4 @@ every recommendation, approve with confidence, and roll back when needed.
 - **Integrations** – connected account lifecycle and catalog visibility.
 - **Hire/Roster** – manage AI employees, autonomy levels, quiet hours.
 
-Keep this document updated if the product direction changes.
+Keep this document aligned with the PRD when metrics or scope change.

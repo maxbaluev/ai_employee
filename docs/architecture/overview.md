@@ -1,39 +1,42 @@
 # Architecture Overview
 
 **Status:** Implemented (UI ↔ ADK bridge + Supabase control plane + Outbox worker)
-· In progress (Composio tooling)
+· In progress (Composio‑only broker, Sidecar polish)
 
 This overview summarises how requests flow through the platform today and calls out the
 gaps you must close to reach the product vision captured in the references.
 
 ```
-Browser (Next.js + CopilotKit)
- ├─ Shared state (`useCoAgent`) renders Desk/Approvals surfaces
- └─ Frontend actions (`useCopilotAction`) invoke tools via Copilot Runtime
+React (Next.js) + CopilotKit (AG‑UI)
+ ├─ Shared state (`useCoAgent`) renders Desk/Approvals/Activity/Integrations/Roster
+ └─ Frontend actions (`useCopilotAction`) for UX‑only effects
 
 Next.js API `/api/copilotkit`
- └─ CopilotRuntime + HttpAgent → forwards messages to Python agent over HTTP
+ └─ CopilotRuntime + HttpAgent → forwards messages to FastAPI agent
 
-FastAPI app (`agent/agent.py`)
- ├─ Wraps google.adk `LlmAgent`
- ├─ Provides before/after callbacks for guardrails + state
- └─ Streams AGUI events back to CopilotKit
+FastAPI (`agent/app.py`)
+ ├─ Wraps ADK `LlmAgent` (typed agents: Planner, Drafter, Compliance, QA/Eval)
+ ├─ Streams AG‑UI events + JSON Patch state deltas
+ └─ Brokers Composio (discover tools, JSON Schemas, policies)
 
-Composio
- ├─ `Composio.tools.get` discovers schemas & scopes
- └─ `Composio.tools.execute` executes Outbox envelopes (worker-driven)
+Outbox Worker (`worker/outbox.py`)
+ └─ Sole executor for `mcp.exec` Action Envelopes (idempotent, retries, DLQ)
 
-Supabase/Postgres
- ├─ Catalog + connected accounts + tasks + audit log (Supabase services)
- └─ Driven by Supabase Cron (pg_cron) recurring jobs + Outbox worker (`python -m worker.outbox start`)
+Supabase/Postgres (RLS)
+ ├─ Minimal state: objectives, employees, tasks, actions, outbox, tools_catalog, policies,
+ │  signals (optional), audit_log, trust_ledger
+ └─ Supabase Cron + Edge Functions for catalog sync and periodic refresh
 ```
+
+Invariants: one universal write, one executor, one UI stream; zero per‑tool code.
 
 Each component is elaborated in the dedicated sub-pages:
 
 - `frontend.md` – Next.js + CopilotKit patterns and decisions.
 - `agent-control-plane.md` – ADK callbacks, FastAPI surface, and the planned control
   plane modules.
-- `composio-execution.md` – how Composio will be integrated end-to-end.
+- `composio-execution.md` – Composio‑only integration end‑to‑end.
+- `universal-action-envelope.md` – single write contract (`mcp.exec`).
 - `data-roadmap.md` – persistence model, background jobs, and roadmap status.
 
 When you add new behaviour, update both the relevant sub-page and this diagram.

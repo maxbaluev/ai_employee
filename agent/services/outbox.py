@@ -164,6 +164,14 @@ class OutboxService(Protocol):
     def requeue_from_dlq(self, envelope_id: str) -> Optional[OutboxRecord]:
         ...
 
+    def defer(self, envelope_id: str, *, retry_in: int) -> None:
+        """Reschedule a pending envelope without marking it as a failure.
+
+        Implementations should set `next_run_at = now + retry_in` and keep status
+        as `pending` so normal polling logic will pick it up later.
+        """
+        ...
+
 
 class InMemoryOutboxService(OutboxService):
     """Queues envelopes in memory for local development and unit tests."""
@@ -251,6 +259,12 @@ class InMemoryOutboxService(OutboxService):
         record.attempts = 0
         record.updated_at = _utc_now()
         return record
+
+    def defer(self, envelope_id: str, *, retry_in: int) -> None:
+        record = self._require(envelope_id)
+        # Keep status pending; set next attempt after the delay
+        record.next_run_at = _utc_now() + timedelta(seconds=retry_in)
+        record.updated_at = _utc_now()
 
 
 class SupabaseOutboxService(OutboxService):
@@ -425,3 +439,13 @@ class SupabaseOutboxService(OutboxService):
             return self._client.table(self._dlq_table, schema=self._schema)
         except TypeError:  # pragma: no cover
             return self._client.table(self._dlq_table)
+
+    def defer(self, envelope_id: str, *, retry_in: int) -> None:
+        self._update(
+            envelope_id,
+            {
+                "status": OutboxStatus.PENDING,
+                "next_run_at": (_utc_now() + timedelta(seconds=retry_in)).isoformat(),
+                "updated_at": _utc_now().isoformat(),
+            },
+        )

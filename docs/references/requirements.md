@@ -1,6 +1,6 @@
 # Functional Requirements Summary
 
-**Source:** Consolidated from legacy requirements (`docs/requirements.md`)
+Source of truth: `docs/prd/universal-ai-employee-prd.md` and `docs/architecture/universal-action-envelope.md`.
 
 These requirements remain valid even though the implementation is incomplete. Track
 progress in Jira/Linear and update the status column as features land.
@@ -13,7 +13,7 @@ progress in Jira/Linear and update the status column as features land.
 | FR-010 | Warm scan after connecting; surface evidence cards. | Supabase Cron/Edge Functions, catalog, UI surfaces | Planned |
 | FR-012 | Plan assembly creates envelopes with tool slug, args, evidence. | Agent refactor, catalog metadata | In progress |
 | FR-020 | Schema-driven edits enforced client + server side. | JSON Schema renderer, validation service | Planned |
-| FR-022 | Outbox executes envelopes with retries + DLQ. | Worker, Supabase, Tenacity | Planned |
+| FR-022 | Outbox executes envelopes with retries + DLQ. | Worker, Supabase, Tenacity | In progress |
 | FR-030 | Roster management with autonomy levels. | Supabase, UI surfaces | Planned |
 | FR-040 | Activity timeline for execution traces. | Supabase audit log, UI surface | Planned |
 | FR-050 | Tenant isolation via RLS. | Supabase policies | Planned |
